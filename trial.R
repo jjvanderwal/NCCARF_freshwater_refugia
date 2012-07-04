@@ -13,6 +13,40 @@ R CMD SHLIB Budkyo.c
 #START R
 #the function
 dyn.load("/home/jc165798/SCRIPTS/sdmcode/R_development/hydrology/Budkyo.so")
+
+(R_dem = seq(10,100,length=10))
+(R_rain = matrix(1:120,nrow=10,ncol=12)) 
+(R_tmin = matrix(1:120,nrow=10,ncol=12)) 
+(R_tmax = matrix(1:120,nrow=10,ncol=12)) 
+(R_V_max = seq(10,100,length=10))
+(R_kRs = seq(10,100,length=10)) 
+(R_lats_radians = seq(10,100,length=10) / (180/pi)) 
+(R_rows = nrow(R_rain))
+(R_E_act = matrix(NA,nrow=10,ncol=12))
+(R_E_pot = matrix(NA,nrow=10,ncol=12))
+(R_Q_run = matrix(NA,nrow=10,ncol=12))
+(R_Net_rad = matrix(NA,nrow=10,ncol=12))
+
+.Call('RunBudykoBucketModel_5km',
+	R_dem,
+	R_rain, 
+	R_tmin, 
+	R_tmax, 
+	R_V_max,
+	R_kRs, 
+	R_lats_radians, 
+	R_rows,
+	R_E_act,
+	R_E_pot,
+	R_Q_run,
+	R_Net_rad )
+								
+
+
+
+
+
+
 library(SDMTools)
 tasc = as.asc(matrix(1:50,nr=10,nc=5),yll=75); print(tasc)
 slope = function(mat,latlon=FALSE) {

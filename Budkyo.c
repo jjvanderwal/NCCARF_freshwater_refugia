@@ -93,19 +93,55 @@ double d_E_pot; // potential evaporation
 // Outputs
 // Monthly grids of ACTUAL EVAPORATION (for further downscaling)
 // Monthly grids of RUNOFF (for Cassie)
-SEXP RunBudykoBucketModel_5km (	SEXP R_dem, 
-								SEXP R_rain, 
-								SEXP R_tmin, 
-								SEXP R_tmax,
-								SEXP R_V_max,
-								SEXP R_kRs,
-								SEXP R_lats_degrees,
-								SEXP R_rows,
-								SEXP R_cols
+SEXP RunBudykoBucketModel_5km (	SEXP R_dem, // vector of dem
+								SEXP R_rain, //matrix of rows being positions and columns being monthly rainfall data
+								SEXP R_tmin, //matrix of rows being positions and columns being monthly min temperature data
+								SEXP R_tmax, //matrix of rows being positions and columns being monthly max temperature data
+								SEXP R_V_max, // vector of Max soil water(total PAWCH)
+								SEXP R_kRs, // vector of Hargreaves coast/interior constant
+								SEXP R_lats_radians, //vector of latitudes in radians ... order associated with positions in previous vectors and matrices
+								SEXP R_rows // number of rows to cycle through
 								)
 {
-int n_rows=691;     // grid dimensions
-int n_cols=886;
+	//define the pointers for the data
+	PROTECT(R_dem = coerceVector(R_dem, REALSXP)); double *d_Z_elev = REAL(R_dem);
+	PROTECT(R_rain = coerceVector(R_rain, REALSXP)); double *d_rain = REAL(R_rain);
+	PROTECT(R_tmin = coerceVector(R_tmin, REALSXP)); double *d_tmin = REAL(R_tmin);
+	PROTECT(R_tmax = coerceVector(R_tmax, REALSXP)); double *d_tmax = REAL(R_tmax);
+	PROTECT(R_V_max = coerceVector(R_V_max, REALSXP)); double *d_V_max = REAL(R_V_max);
+	PROTECT(R_kRs = coerceVector(R_kRs, REALSXP)); double *d_kRs = REAL(R_kRs);
+	PROTECT(R_lats_radians = coerceVector(R_lats_radians, REALSXP)); double *d_lats_radians = REAL(R_lats_radians);
+	PROTECT(R_rows = coerceVector(R_rows, INTSXP)); int n_rows = INTEGER(R_rows)[0];
+	
+	//define and protect some outputs
+	SEXP R_E_act; // output matrix, identical to input rain, that stores actual evaporation
+	SEXP R_E_pot; // output matrix, identical to input rain, that stores potential evaporation
+	SEXP R_Q_run; // output matrix, identical to input rain, that stores runoff
+	SEXP R_Net_rad; // output matrix, identical to input rain, that stores net radiation
+	PROTECT(R_E_act = allocMatrix(REALSXP, n_rows, 12)); double *d_E_act = REAL(R_E_act);
+	PROTECT(R_E_pot = allocMatrix(REALSXP, n_rows, 12)); double *d_E_pot = REAL(R_E_pot);
+	PROTECT(R_Q_run = allocMatrix(REALSXP, n_rows, 12)); double *d_Q_run = REAL(R_Q_run);
+	PROTECT(R_Net_rad = allocMatrix(REALSXP, n_rows, 12)); double *d_Net_rad = REAL(R_Net_rad);
+	
+	//Rprintf ("nrows input is %i\n", n_rows);
+	
+	//define some interim variables
+	int i_row, ii, jj; // counters
+	
+	//set all outputs to NA
+	for (ii=0; ii<n_rows; ii++) {
+		for (jj=0; jj<12; jj++) {
+			d_E_act[ii+jj*n_rows] = NA_REAL;
+			d_E_pot[ii+jj*n_rows] = NA_REAL;
+			d_Q_run[ii+jj*n_rows] = NA_REAL;
+			d_Net_rad[ii+jj*n_rows] = NA_REAL;
+		}
+	}
+	
+
+/*
+//int n_rows=691;     // grid dimensions
+//int n_cols=886;
 int i_row,i_col;  // row col counters
 int i_month; // month of year  0-11
 int i_year;  // year for Budyko loop
@@ -351,8 +387,19 @@ b_success=0;
      FreeFloat2DArray(f_E_pot[i_month]);
      FreeFloat2DArray(f_P_rain[i_month]);
      }
+
 // return successfulness
-  b_success=1;
-  return b_success;
+  int b_success=1;
+  return(b_success);
+*/
+
+	SEXP res; PROTECT(res = allocVector(VECSXP, 4));
+	SET_VECTOR_ELT(res, 0, R_E_act);
+	SET_VECTOR_ELT(res, 1, R_E_pot);
+	SET_VECTOR_ELT(res, 2, R_Q_run);
+	SET_VECTOR_ELT(res, 3, R_Net_rad);
+
+	UNPROTECT(13);
+	return(res);
 }// end func Run Budyko Bucket
 
