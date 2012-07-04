@@ -298,7 +298,7 @@ double d_Rnl; //Net longwave
 double d_sTminK4, d_sTmaxK4, d_sigma_etc;  //Stephan Boltzmann corrections
 double d_ea,d_ea_etc,d_rso_etc;     // dewpoint stuff
   //Sunseet hour angle
-  d_omega=acos( -tan(arg_d_lat)*tan(arg_d_dr)  );    // Allen eq 25
+  d_omega=acos( -tan(arg_d_lat)*tan(arg_d_declination)  );    // Allen eq 25
 
 // Calc rad at top of atmosphere
   d_Ra=37.58603136*arg_d_dr*(
@@ -306,14 +306,14 @@ double d_ea,d_ea_etc,d_rso_etc;     // dewpoint stuff
       cos(arg_d_lat)*cos(arg_d_declination)*sin(d_omega) );     // Allen eq 21
   // Now calculate Shortwave radiation
   d_Rs=arg_f_kRs*sqrt(arg_d_Tmax-arg_d_Tmin)*d_Ra;    // Allen eq 50
-  d_Rso=(0.75+200000*arg_d_Z)*d_Ra; // Allen eq 37
+  d_Rso=(0.75+0.00002*arg_d_Z)*d_Ra; // Allen eq 37
   d_Rns=0.77*d_Rs;  // for grass ref albedo
   d_sTmaxK4=0.5195*arg_d_Tmax+26.361;         // steph boltz correction
   d_sTminK4=0.5195*arg_d_Tmin+26.361;
   d_sigma_etc= (d_sTmaxK4+d_sTminK4)/2;      // Allen eq 39
-  d_ea=0.6108*exp(17.27*arg_d_Tmin/ (arg_d_Tmin+273.3));  // Allen eq 14
+  d_ea=0.6108*exp((17.27*arg_d_Tmin)/ (arg_d_Tmin+237.3));  // Allen eq 14
   d_ea_etc=0.34-0.14*sqrt(d_ea);   // Allen eq39
-  d_rso_etc=1.35*(d_Rs/d_Rso)-1.35;
+  d_rso_etc=1.35*(d_Rs/d_Rso)-0.35;
   d_Rnl=d_sigma_etc*d_ea_etc*d_rso_etc;
   d_Rn=d_Rns-d_Rnl;
 
