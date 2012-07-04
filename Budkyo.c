@@ -117,28 +117,93 @@ SEXP RunBudykoBucketModel_5km (	SEXP R_dem, // vector of dem
 	SEXP R_E_act; // output matrix, identical to input rain, that stores actual evaporation
 	SEXP R_E_pot; // output matrix, identical to input rain, that stores potential evaporation
 	SEXP R_Q_run; // output matrix, identical to input rain, that stores runoff
-	SEXP R_Net_rad; // output matrix, identical to input rain, that stores net radiation
+	SEXP R_Rn; // output matrix, identical to input rain, that stores net radiation
 	PROTECT(R_E_act = allocMatrix(REALSXP, n_rows, 12)); double *d_E_act = REAL(R_E_act);
 	PROTECT(R_E_pot = allocMatrix(REALSXP, n_rows, 12)); double *d_E_pot = REAL(R_E_pot);
 	PROTECT(R_Q_run = allocMatrix(REALSXP, n_rows, 12)); double *d_Q_run = REAL(R_Q_run);
-	PROTECT(R_Net_rad = allocMatrix(REALSXP, n_rows, 12)); double *d_Net_rad = REAL(R_Net_rad);
+	PROTECT(R_Rn = allocMatrix(REALSXP, n_rows, 12)); double *d_Rn = REAL(R_Rn);
+	
+	SEXP R_V_store; // Soil water actually present
+	PROTECT(R_V_store = allocMatrix(REALSXP, n_rows, 12)); double *d_V_store = REAL(R_V_store); 
 	
 	//Rprintf ("nrows input is %i\n", n_rows);
 	
-	//define some interim variables
-	int i_row, ii, jj; // counters
-	
-	//set all outputs to NA
-	for (ii=0; ii<n_rows; ii++) {
-		for (jj=0; jj<12; jj++) {
-			d_E_act[ii+jj*n_rows] = NA_REAL;
-			d_E_pot[ii+jj*n_rows] = NA_REAL;
-			d_Q_run[ii+jj*n_rows] = NA_REAL;
-			d_Net_rad[ii+jj*n_rows] = NA_REAL;
+	//define some variables
+	int i_row;  // row col counters
+	int i_month; // month of year  0-11
+	int i_year;  // year for Budyko loop
+	double d_J[12]={15,45,74,105,135,166,196,227,258,288,319,349};   // Julian day for each month
+	double d_dr;
+	double d_declination;
+
+	//set all outputs to NA & d_V_Store as half possible storage
+	for (i_row=0; i_row<n_rows; i_row++) {
+		for (i_month=0; i_month<12; i_month++) {
+			d_E_act[i_row+i_month*n_rows] = NA_REAL;
+			d_E_pot[i_row+i_month*n_rows] = NA_REAL;
+			d_Q_run[i_row+i_month*n_rows] = NA_REAL;
+			d_Rn[i_row+i_month*n_rows] = NA_REAL;
+			d_V_store[i_row+i_month*n_rows] = d_V_max[i_row] / 2;
 		}
 	}
 	
+	// Step 1 Calculate monthly Potential Evaporation using Preistley Taylor
+	// need max and min temp, Z	
+	for (i_month=0; i_month<12; i_month++) {
+		d_dr=1 + 0.033*cos(2*3.141592654*d_J[i_month]/365); //Allen eq23
+		d_declination=0.409*sin((2*3.141592654*d_J[i_month]/365)-1.39);  // Allen eq 24
+		for (i_row=0; i_row<n_rows; i_row++) {
+			// Calc rad at top of atmosphere
+			d_Rn[i_row+i_month*n_rows] = CalculateNetRadiation(d_lats_radians[i_row],    // latitiude RADIANS
+										d_Z_elev[i_row],      // altitude METRES
+										d_dr,     //
+										d_declination,  //declination
+										d_kRs[i_row],
+										d_tmax[i_row+i_month*n_rows],
+										d_tmin[i_row+i_month*n_rows]);
+			// Calc potential evaporation Priestley Taylor
+			double d_T = (d_tmax[i_row+i_month*n_rows]+d_tmin[i_row+i_month*n_rows])/2;
+			d_E_pot[i_row+i_month*n_rows]=CalculatePTEvaporation( d_T, // mean temp
+																d_Z_elev[i_row],// altitude
+																d_Rn[i_row+i_month*n_rows]) ; // net rad
+			//Rprintf ("nrows input is %i -- %i -- %i -- %f -- %f\n", i_month, i_row, i_row+i_month*n_rows, d_Rn[i_row+i_month*n_rows],d_E_pot[i_row+i_month*n_rows] );
+		}
+	}
 
+	// do the Budyko work ... go round for 3 years to near equilibrium then export
+	for(i_year=0;i_year<4;i_year++) {
+		// Loop through all the months
+		for(i_month=0;i_month<12;i_month++)	{
+			for(i_row=0;i_row<n_rows;i_row++) {
+				// Do bucket
+				// Add precipitation to soil
+				double d_W=d_V_store[i_row] + d_rain[i_row+i_month*n_rows];
+				// do Budyko
+				d_E_act[i_row+i_month*n_rows]= (d_E_pot[i_row+i_month*n_rows]*d_W)/pow((pow(d_W,1.9)+pow(d_E_pot[i_row+i_month*n_rows],1.9)),1.9);
+				// How much water is left?
+				d_V_store[i_row+i_month*n_rows]=d_W-d_E_act[i_row+i_month*n_rows];
+				// Calc runoff
+				if(d_V_store[i_row+i_month*n_rows]>d_V_max[i_row]) {// runoff
+					d_Q_run[i_row+i_month*n_rows]=d_V_store[i_row+i_month*n_rows]-d_V_max[i_row];
+					d_V_store[i_row+i_month*n_rows]=d_V_max[i_row];  // soil stays full
+				}
+				else { d_Q_run[i_row+i_month*n_rows]=0; }
+			}// end for i_row
+		}// end for i_month
+	}  // end for i_year
+
+	//setup all outputs
+	SEXP res; PROTECT(res = allocVector(VECSXP, 4));
+	SET_VECTOR_ELT(res, 0, R_E_act);
+	SET_VECTOR_ELT(res, 1, R_E_pot);
+	SET_VECTOR_ELT(res, 2, R_Q_run);
+	SET_VECTOR_ELT(res, 3, R_Rn);
+
+	UNPROTECT(14);
+	return(res);
+}// end func Run Budyko Bucket
+	
+	
 /*
 //int n_rows=691;     // grid dimensions
 //int n_cols=886;
@@ -393,13 +458,4 @@ b_success=0;
   return(b_success);
 */
 
-	SEXP res; PROTECT(res = allocVector(VECSXP, 4));
-	SET_VECTOR_ELT(res, 0, R_E_act);
-	SET_VECTOR_ELT(res, 1, R_E_pot);
-	SET_VECTOR_ELT(res, 2, R_Q_run);
-	SET_VECTOR_ELT(res, 3, R_Net_rad);
-
-	UNPROTECT(13);
-	return(res);
-}// end func Run Budyko Bucket
 
