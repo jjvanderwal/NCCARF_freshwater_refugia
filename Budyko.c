@@ -110,7 +110,7 @@ SEXP RunBudykoBucketModel_5km ( SEXP R_dem, // vector of dem
 	PROTECT(R_kRs = coerceVector(R_kRs, REALSXP)); double *d_kRs = REAL(R_kRs);
 	PROTECT(R_lats_radians = coerceVector(R_lats_radians, REALSXP)); double *d_lats_radians = REAL(R_lats_radians);
 	PROTECT(R_rows = coerceVector(R_rows, INTSXP)); int n_rows = INTEGER(R_rows)[0];
-
+	
 	//define and protect some outputs
 	SEXP R_E_act; // output matrix, identical to input rain, that stores actual evaporation
 	SEXP R_E_pot; // output matrix, identical to input rain, that stores potential evaporation
@@ -138,7 +138,7 @@ SEXP RunBudykoBucketModel_5km ( SEXP R_dem, // vector of dem
 
 	//set all outputs to NA & d_V_Store as half possible storage
 	for (i_row=0; i_row<n_rows; i_row++) {
-		d_V_store[i_row] = d_V_max[i_row] / 2;
+		d_V_store[i_row] = d_V_max[i_row] ;// / 2;
 		for (i_month=0; i_month<12; i_month++) {
 			d_E_act[i_row+i_month*n_rows] = NA_REAL;
 			d_E_pot[i_row+i_month*n_rows] = NA_REAL;
@@ -173,7 +173,7 @@ SEXP RunBudykoBucketModel_5km ( SEXP R_dem, // vector of dem
 	}
 
 	// do the Budyko work ... go round for 3 years to near equilibrium then export
-	for(i_year=0;i_year<4;i_year++) {
+	for(i_year=0;i_year<5;i_year++) {
 			// Loop through all the months
 			for(i_month=0;i_month<12;i_month++)     {
 					for(i_row=0;i_row<n_rows;i_row++) {
