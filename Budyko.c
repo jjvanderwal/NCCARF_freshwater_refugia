@@ -427,7 +427,7 @@ SEXP BudykoBucketModelDynamic ( SEXP R_dem, // vector of dem
 			//if (!R_FINITE(d_E_pot[i_row+i_month*n_rows])) Rprintf ("month -- %i, row -- %i, position -- %i, d_Rn -- %f, E_pot -- %f\n", i_month, i_row, i_row+i_month*n_rows, d_Rn[i_row+i_month*n_rows],d_E_pot[i_row+i_month*n_rows] );
 		}
 	}
-/*
+
 	// Loop through 36 months to initialize all values
 	for(i_month=0;i_month<36;i_month++)     {
 			for(i_row=0;i_row<n_rows;i_row++) {
@@ -474,7 +474,7 @@ SEXP BudykoBucketModelDynamic ( SEXP R_dem, // vector of dem
 					} else { d_Q_run[i_row+i_month*n_rows]=0; }
 			}// end for i_row
 	}// end for i_month
-*/
+
 	//setup all outputs
 	SEXP res; PROTECT(res = allocVector(VECSXP, 4));
 	SET_VECTOR_ELT(res, 0, R_E_act);
