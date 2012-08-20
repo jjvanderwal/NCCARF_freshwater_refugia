@@ -46,6 +46,11 @@ if (outname=='current') {
 	pr = read.csv(pr,as.is=TRUE) #read in precipitatation
 }
 
+#trim up the data to years of interest
+yois = 1976:2005
+cois = NULL; for (yy in yois) cois = c(cois,grep(yy,colnames(pr)))
+tmin = tmin[,cois]; tmax = tmax[,cois]; pr = pr[cois]
+
 ###run the analysis and write out data
 tt = .Call('BudykoBucketModelDynamic',
 	pos$DEM, #dem info
@@ -91,7 +96,9 @@ wd = '/home/jc165798/working/NARP_hydro/'; setwd(wd) #deifne and set the working
 base.asc = read.asc.gz(base.asc) #read in the base asc file
 pos = read.csv(pos,as.is=TRUE)
 pos$PAWHC = extract.data(cbind(pos$lon,pos$lat),read.asc('inputs/PAWHC_5km.asc')) #append data to pos
+pos$PAWHC[which(is.na(pos$PAWHC))] = mean(pos$PAWHC,na.rm=TRUE) #set missing data to mean values
 pos$kRs = extract.data(cbind(pos$lon,pos$lat),read.asc('inputs/kRs_5km.asc'))
+pos$kRs[which(is.na(pos$kRs))] = 0.16 #set missing data to 0.16
 pos$DEM = extract.data(cbind(pos$lon,pos$lat),read.asc('inputs/DEM_5km.asc'))
 
 if (outname=='current') {
@@ -120,9 +127,6 @@ summary(as.vector(tt[[1]]))
 summary(as.vector(tt[[2]]))
 summary(as.vector(tt[[3]]))
 summary(as.vector(tt[[4]]))
-
-
-
 
 
 Eact = tt[[1]]; save(Eact, file=paste('output/Eact.',outname,'.Rdata',sep='')) #save the actual evapotranspiration
