@@ -13,14 +13,12 @@ db = db[,c(11,12,1:10,13:31)] #reorder the columns
 g = graph.data.frame(db,directed=TRUE) #create the graph
 gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
-###cycle through all subgraphs and do analysis
-out = NULL #setup the output
-for (ii in 1:length(gg)) { cat(ii,'\n') #cycle through each subgraph
-	if (any(degree(gg[[ii]],mode="out")>1)) { #bifucation exists... deal with it
+#function to accumulate info in each subgraph in a full graph
+accum = function(gt) { cat('.')
+	out=NULL #define the output
+	if (any(degree(gt,mode="out")>1)) { #bifucation exists... deal with it
 	
 	} else { #no bifucation so deal simplistically with it
-		ii = 1192
-		gt = gg[[ii]]
 		for (ee in 1:length(E(gt))) {
 			etmp = E(gt)[ee] #define the edge we are working with
 			SegmentNo = etmp$SegmentNo #segment number that we are aggregating to
@@ -29,15 +27,9 @@ for (ii in 1:length(gg)) { cat(ii,'\n') #cycle through each subgraph
 			out = rbind(out,data.frame(SegmentNo=SegmentNo,runoff=sum(c(etmp$LocalRunoff,E(tt)$LocalRunoff),na.rm=TRUE)))
 		}
 	}
-
+	return(as.matrix(out))
 }
+tout = sapply(gg[1:10],accum,simplify=TRUE,USE.NAMES=FALSE) #apply the function to all the subgraphs...
+out = NULL; for (ii in 1:length(tout)) out = rbind(out,tout[[ii]])
+db2 = merge(db,out)
 
-###some checks
-E(gg[[850]])
-E(gg[[850]])$HydroID
-db[which(db$HydroID%in%E(gg[[850]])$HydroID),c("From_Node","To_Node","SegmentNo","HydroID","NextDownID")]
-
-g.clust = clusters(g,"weak") #create the clusters
-
-?subcomponent
-E(gg[[850]])$SegmentNo[incident(gg[[850]],"1130388",mode="out")]
