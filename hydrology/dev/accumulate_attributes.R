@@ -26,11 +26,30 @@ gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
 ### do the accumulation
 #function to accumulate info in each subgraph in a full graph
+gt = gg[[827]]
+degree(gt,mode="out")
+
 accum = function(gt) { cat('.')
 	require(igraph)
 	out=NULL #define the output
 	if (any(degree(gt,mode="out")>1)) { #bifucation exists... deal with it
-	
+		while(length(E(gt))>0) { #loop until all edges are dealt with
+			vois = which(degree(gt,mode="in")==0) #get index of the headwater vertices
+			for (voi in vois) { #cycle through the vertices
+				eois = incident(gt,V(gt)[voi],"out") #get an index of the output edges from that vertex
+				for (eoi in eois) {
+					e_tmp = E(gt)[eoi] #this is the edge being worked with
+					runoff=e_tmp$LocalRunoff #get the runoff
+					out = rbind(out,data.frame(HydroID=e_tmp$HydroID,runoff=runoff)) #append the current data
+					v2 = get.edge(gt,e_tmp)[2] #get the index of the "to_vertex"
+					next_edges = incident(gt,V(gt)[v2],"out") #get an index of the output edges from that vertex
+					for (next_edge in next_edges) { #cycle through the next edges and add the upstream flow
+						E(gt)$LocalRunoff[next_edge] = E(gt)$LocalRunoff[next_edge] + (E(gt)$BiProp[next_edge] * runoff) #add the appropriate proportion of upstream runoff
+					}
+				}
+			}
+			gt = delete.vertices(gt, V(gt)[vois])#remove the vois
+		}
 	} else { #no bifucation so deal simplistically with it
 		for (ee in 1:length(E(gt))) {
 			etmp = E(gt)[ee] #define the edge we are working with
@@ -43,7 +62,7 @@ accum = function(gt) { cat('.')
 	return(out)
 }
 
-ncore=4
+ncore=10
 cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running the analysis
 	print(system.time({
 		tout = parLapplyLB(cl,gg,accum)
