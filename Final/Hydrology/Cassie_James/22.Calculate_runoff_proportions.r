@@ -5,25 +5,20 @@
 
 ##script drafted by Lauren Hodgseon and Cassie James
 ##---------------------------------------------------------------------------------
-network=read.csv('/home/jc148322/NARPfreshwater/network.csv',as.is=T) # a file with columns of interest from NetworkAttributes.dbf and StreamAttributes.dbf from geofabric database: HydroID, SegmentNo, NextDownID, From_Node, To_Node, StreamLen, Area
+network=read.csv('/home/jc148322/NARPfreshwater/Hydrology/network.csv',as.is=T) # a file with columns of interest from NetworkAttributes.dbf and StreamAttributes.dbf from geofabric database: HydroID, SegmentNo, NextDownID, From_Node, To_Node, StreamLen, Area
 
-wd = "/home/jc246980/Hydrology.trials/"; setwd(wd) 
-load(file=paste(wd,'Reach_runoff_5km.Rdata',sep=''))  #load runoff aggregated to reach
-runoff=Reach_runoff; colnames(runoff)[1]='SegmentNo' #rename object
-runoff=runoff[which(runoff$SegmentNo %in% network$SegmentNo),] #remove SegmentNos for which runoff was not calculated, ie. islands
-runoff=merge(network[,c('HydroID','SegmentNo','Shape_Leng')],runoff,by='SegmentNo') #attribute a hydroID to each SegNo
-
+proportion=network[,c('HydroID','SegmentNo','Shape_Leng')] #create a data frame to work on
 ##---------------------------------------------------------------------------------
 ##1. Find the proportion of flow where two or more streams (HydroID) fall within a single reach (SegmentNo)
 
-streamLength=aggregate(runoff$Shape_Leng, by = list(runoff$SegmentNo), sum) #find the total length of stream within each reach  
+streamLength=aggregate(proportion$Shape_Leng, by = list(proportion$SegmentNo), sum) #find the total length of stream within each reach  
 colnames(streamLength)=c('SegmentNo','TotLength') #rename columns
 
-runoff=merge(runoff,streamLength, by='SegmentNo') #attach 'total stream length' column to runoff table
+proportion=merge(proportion,streamLength, by='SegmentNo') #attach 'total stream length' column to proportion table
 
-runoff$SegProp=runoff$Shape_Leng/runoff$TotLength #divide individual stream length by total length of streams in a reach to find proportion of local flow attributed to each stream.
+proportion$SegProp=proportion$Shape_Leng/proportion$TotLength #divide individual stream length by total length of streams in a reach to find proportion of local flow attributed to each stream.
 
-runoff=runoff[,c('HydroID','SegmentNo', 'Runoff','SegProp')] #keep only necessary columns
+proportion=proportion[,c('HydroID','SegmentNo','SegProp')] #keep only necessary columns
 
 ##---------------------------------------------------------------------------------
 ##2. Find the proportion of flow where bifurcation occurs.
@@ -42,28 +37,27 @@ bi_main=NextUp$NextDownID #create a vector of all 'main' channels beneath a bifu
 bi_sub=bifurc$HydroID[which(!(bifurc$HydroID %in% bi_main))]#create a vector of all 'sub' channels beneath a bifurcation
 mainchannel=network$HydroID[which(!(network$HydroID %in% bifurc$HydroID))]    # returns all networkatts that have been identified as main  (i.e.  HydroIds that are NOT below duplicated From_Nodes)
 
-runoff["ChannelType"] <- NA #create column 
-runoff$ChannelType[which(runoff$HydroID %in% bi_main)] = "bi_main"
-runoff$ChannelType[which(runoff$HydroID %in% bi_sub)] = "bi_sub"
-runoff$ChannelType[which(runoff$HydroID %in% mainchannel)] = "main"
+proportion["ChannelType"] <- NA #create column 
+proportion$ChannelType[which(proportion$HydroID %in% bi_main)] = "bi_main"
+proportion$ChannelType[which(proportion$HydroID %in% bi_sub)] = "bi_sub"
+proportion$ChannelType[which(proportion$HydroID %in% mainchannel)] = "main"
 
 ##---------------------------------------------------------------------------------
 ##2. Find the proportion of flow where bifurcation occurs.
 ##b. apportion flow to a bifurcation based on area of subcatchment
-##Note: We have Area data for each SegmentNo, but not for each HydroID.  To find Area that flows into each HydroID, times area by proportion of stream to which it contributes runoff
+##Note: We have Area data for each SegmentNo, but not for each HydroID.  To find Area that flows into each HydroID, times area by proportion of stream to which it contributes proportion
 
-runoff=merge(runoff,network[,c('HydroID','From_Node','NextDownID','Area')],by='HydroID')
-runoff$Hydro_Area=runoff$SegProp*runoff$Area
+proportion=merge(proportion,network[,c('HydroID','From_Node','Area')],by='HydroID')
+proportion$Hydro_Area=proportion$SegProp*proportion$Area
 
-totArea=aggregate(runoff$Hydro_Area, by = list(runoff$From_Node), sum) #find the total local catchment area of branches of bifurcations
+totArea=aggregate(proportion$Hydro_Area, by = list(proportion$From_Node), sum) #find the total local catchment area of branches of bifurcations
 colnames(totArea)=c('From_Node','TotArea')
 
-runoff=merge(runoff,totArea,by='From_Node')
+proportion=merge(proportion,totArea,by='From_Node')
 
-runoff$BiProp=runoff$Hydro_Area/runoff$TotArea  #Proportion of flow that runs into a branch of a bifurcation is here apportioned based on the size of the local catchment
+proportion$BiProp=proportion$Hydro_Area/proportion$TotArea  #Proportion of flow that runs into a branch of a bifurcation is here apportioned based on the size of the local catchment
 
-runoff$LocalRunoff=runoff$Runoff*runoff$SegProp #Calculate local runoff attributed to each HydroID
-runoff=runoff[,c('HydroID','SegmentNo','From_Node','NextDownID','ChannelType','LocalRunoff','BiProp')] #keep only columns needed for accumulation
+proportion=proportion[,c('HydroID','SegmentNo','ChannelType','BiProp','SegProp')] #keep only columns needed for accumulation
 
-write.csv(runoff,'/home/jc148322/NARPfreshwater/local_runoff.csv',row.names=F)
+write.csv(proportion,'/home/jc148322/NARPfreshwater/Hydrology/proportion.csv',row.names=F)
 
