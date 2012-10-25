@@ -6,8 +6,17 @@ library(igraph)
 
 wd = "/home/jc165798/working/NARP_hydro/flow_accumulation/"; setwd(wd) #define and set working directory
 network = read.csv('NetworkAttributes.csv',as.is=TRUE) #read in the data
-runoff = read.csv('local_runoff.csv',as.is=TRUE); runoff = runoff[,c(2,6)] #read in runoff info
-db = merge(network,runoff,all=TRUE)
+proportion = read.csv('/home/jc148322/NARPfreshwater/Hydrology/proportion.csv',as.is=TRUE); proportion = proportion[,c(1,4,5)] #read in proportion rules
+db = merge(network,proportion,all=TRUE)
+
+#load desired runoff file
+load(file='/home/jc246980/Hydrology.trials/Reach_runoff_5km.Rdata')  #read in runoff data
+runoff=Reach_runoff #rename object
+runoff=runoff[which(runoff$SegmentNo %in% network$SegmentNo),] #remove extra SegmentNos
+
+db = merge(db,runoff,all=TRUE)
+db$LocalRunoff=db$Annual_runoff*db$SegProp #Calculate local runoff attributed to each HydroID
+
 
 db = db[,c(11,12,1:10,13:31)] #reorder the columns
 g = graph.data.frame(db,directed=TRUE) #create the graph
