@@ -26,25 +26,30 @@ gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
 ### do the accumulation
 #function to accumulate info in each subgraph in a full graph
-gt=gg[[975]]
 accum = function(gt) { 
 	require(igraph)
 	out=NULL #define the output
 	while(length(E(gt))>0) { #loop until all edges are dealt with
 		vois = which(degree(gt,mode="in")==0) #get index of the headwater vertices
-		v.from.to = NULL; for (ii in neighborhood(gt,1,V(gt)[vois],"out")) { #get the index of the from & to nodes for each edge
-			if (length(ii)>1) v.from.to = rbind(v.from.to,data.frame(from=ii[1],to=ii[2:length(ii)]))
-		}
+		suppressWarnings({ 
+			tt = do.call("rbind", neighborhood(gt,1,V(gt)[vois],"out")) #get the index of the from & to nodes for each edge in a list
+		})
+		v.from.to = NULL; for (ii in 2:ncol(tt)) v.from.to = rbind(v.from.to,tt[,c(1,ii)]) #flatten the list to a matrix and setup for next cleaning
+		v.from.to = unique(v.from.to); v.from.to = v.from.to[which(v.from.to[,1]-v.from.to[,2]!=0),] #remove duplicated and where from and to are the same
+		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
 		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,1]],V(gt)[v.from.to[,2]]))) #get an index of the output edges from that vertex
 		out = rbind(out,data.frame(HydroID=E(gt)$HydroID[eois],runoff=E(gt)$LocalRunoff[eois])) #store the runoff for the current edges
 		
-		tt = neighborhood(gt,1,V(gt)[v.from.to[,2]],"out") #get the next down verticies from the current edges
-		next_edge = NULL; for (ii in 1:length(eois)) { #get an index of the next down vertices and aggregate list to dataframe
-			if (length(tt[[ii]])>1) next_edge = rbind(next_edge,data.frame(e.from=eois[ii],from=tt[[ii]][1],to=tt[[ii]][2:length(tt[[ii]])]))
-		}
-		if (!is.null(next_edge)) { #only do this if there is something down stream
-			next_edge$e.next = get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]]))) #get an index of the next down edges
-			E(gt)$LocalRunoff[next_edge$e.next] = E(gt)$LocalRunoff[next_edge$e.next] + (E(gt)$BiProp[next_edge$e.from] * E(gt)$LocalRunoff[next_edge$e.from])#append appropriate runoff to next down edges using proportions
+		suppressWarnings({ 
+			tt = cbind(eois, do.call("rbind", neighborhood(gt,1,V(gt)[v.from.to[,2]],"out"))) #get the next down verticies from the current edges
+		})
+		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
+			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
+			next_edge = unique(next_edge); next_edge = next_edge[which(next_edge[,2]-next_edge[,3]!=0),] #remove duplicated and where from and to are the same
+			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
+			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])))) #get an index of the next down edges
+			colnames(next_edge) = c("e.from","from","to","e.next")
+			E(gt)$LocalRunoff[next_edge[,"e.next"]] = E(gt)$LocalRunoff[next_edge[,"e.next"]] + (E(gt)$BiProp[next_edge[,"e.from"]] * E(gt)$LocalRunoff[next_edge[,"e.from"]])#append appropriate runoff to next down edges using proportions
 		}
 		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
 	}
@@ -57,6 +62,7 @@ cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running t
 	print(system.time({ tout = parLapplyLB(cl,gg,accum) }))
 stopCluster(cl) #stop the cluster for analysis
 
-out = NULL; for (ii in 1:length(tout)) {cat('.');out = rbind(out,tout[[ii]])} #aggregate the list into a single matrix
-db2 = merge(db,out)
+###need to store the outputs
+out = do.call("rbind",tout) #aggregate the list into a single matrix
+db2 = merge(db,out) #merge this back into the overall database
 
