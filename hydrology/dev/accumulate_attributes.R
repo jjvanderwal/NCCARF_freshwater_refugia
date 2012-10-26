@@ -35,9 +35,10 @@ accum = function(gt) {
 			tt = do.call("rbind", neighborhood(gt,1,V(gt)[vois],"out")) #get the index of the from & to nodes for each edge in a list
 		})
 		v.from.to = NULL; for (ii in 2:ncol(tt)) v.from.to = rbind(v.from.to,tt[,c(1,ii)]) #flatten the list to a matrix and setup for next cleaning
-		v.from.to = unique(v.from.to); v.from.to = v.from.to[which(v.from.to[,1]-v.from.to[,2]!=0),] #remove duplicated and where from and to are the same
+		v.from.to = rbind(v.from.to,v.from.to) #allow for duplicate from-to nodes with separate SegmentNo
 		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
-		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,1]],V(gt)[v.from.to[,2]]))) #get an index of the output edges from that vertex
+		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,1]],V(gt)[v.from.to[,2]])),multi=TRUE) #get an index of the output edges from that vertex
+		eois = unique(eois); if (0 %in% eois) eois = eois[-which(eois==0)] #only keep unique eois
 		out = rbind(out,data.frame(HydroID=E(gt)$HydroID[eois],runoff=E(gt)$LocalRunoff[eois])) #store the runoff for the current edges
 		
 		suppressWarnings({ 
@@ -49,7 +50,7 @@ accum = function(gt) {
 			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
 			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])))) #get an index of the next down edges
 			colnames(next_edge) = c("e.from","from","to","e.next")
-			E(gt)$LocalRunoff[next_edge[,"e.next"]] = E(gt)$LocalRunoff[next_edge[,"e.next"]] + (E(gt)$BiProp[next_edge[,"e.from"]] * E(gt)$LocalRunoff[next_edge[,"e.from"]])#append appropriate runoff to next down edges using proportions
+			E(gt)$LocalRunoff[next_edge[,"e.next"]] = E(gt)$LocalRunoff[next_edge[,"e.next"]] + (E(gt)$BiProp[next_edge[,"e.next"]] * E(gt)$LocalRunoff[next_edge[,"e.from"]])#append appropriate runoff to next down edges using proportions
 		}
 		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
 	}
