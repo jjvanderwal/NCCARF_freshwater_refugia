@@ -8,7 +8,6 @@ library(igraph); library(parallel) #load the necessary libraries
 input.dir='/home/jc246980/Hydrology.trials/Aggregate_reach/Output_futures/Qrun_aggregated2reach_1976to2005/'
 load(file=paste(input.dir,'Current_dynamic.Rdata',sep=''))
 attribute=Runoff  #rename object
-attribute=cbind(Reach_runoff$SegmentNo,attribute); colnames(attribute)[1]='SegmentNo'
 cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 
 ################################################################################
