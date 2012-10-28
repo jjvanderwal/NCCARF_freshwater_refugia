@@ -10,6 +10,9 @@ load(file=paste(input.dir,'Current_dynamic.Rdata',sep=''))
 attribute=Runoff  #rename object
 cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 
+#define outputs
+out.dir='/home/jc246980/Hydrology.trials/' #define output directory
+filename='accumulate_months' #name your file
 ################################################################################
 
 wd = "/home/jc165798/working/NARP_hydro/flow_accumulation/"; setwd(wd) #define and set working directory
@@ -83,3 +86,4 @@ stopCluster(cl) #stop the cluster for analysis
 out = do.call("rbind",tout) #aggregate the list into a single matrix
 db2 = merge(db,out) #merge this back into the overall database
 
+write.csv(out,paste(out.dir,filename,'.csv',sep=''),row.names=F)
