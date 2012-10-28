@@ -76,7 +76,7 @@ accum = function(gt,cois) {
 ###do the actual accumulation
 ncore=4 #this number of cores seems most appropriate
 cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running the analysis
-	print(system.time({ tout = parLapplyLB(cl,gg,accum) }))
+	print(system.time({ tout = parLapplyLB(cl,gg,accum, cois=cois) }))
 stopCluster(cl) #stop the cluster for analysis
 
 ###need to store the outputs
