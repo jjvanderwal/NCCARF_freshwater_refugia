@@ -61,13 +61,12 @@ accum = function(gt,cois) {
 		})
 		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
 			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
-			#next_edge = unique(next_edge); next_edge = next_edge[which(next_edge[,2]-next_edge[,3]!=0),] #remove duplicated and where from and to are the same
 			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
-			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=T)) #get an index of the next down edges
-			next_edge=unique(next_edge); next_edge=next_edge[which(next_edge[,4]!=0),]
+			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])))) #get an index of the next down edges
+			next_edge=unique(next_edge);
 			next_edge=matrix(next_edge,ncol=4); colnames(next_edge) = c("e.from","from","to","e.next")
 			for (coi in cois) {
-				v=get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from'])
+				v=get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from']) ####error in here
 				gt=set.edge.attribute(gt, coi, next_edge[,'e.next'],v)
 			}
 		}
