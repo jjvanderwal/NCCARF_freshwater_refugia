@@ -66,8 +66,18 @@ accum = function(gt,cois) {
 			next_edge=unique(next_edge);
 			next_edge=matrix(next_edge,ncol=4); colnames(next_edge) = c("e.from","from","to","e.next")
 			for (coi in cois) {
-				v=get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from']) ####error in here
-				gt=set.edge.attribute(gt, coi, next_edge[,'e.next'],v)
+				v=cbind(next_edge[,'e.next'],get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from'])) #creates a 2 colmn matrix of next edge id and the accumulated value -- needed to deal with 2 or more flows going into a single node
+				colnames(v)=c('e.next','acc')
+				if (nrow(v)!=length(unique(v[,1]))) { #do this if there is any duplicate net down edges
+					tfun = function(x) {return(c(sum(x),length(x)))} #define a aggregate function to get sums for e.next and a count
+					tt = aggregate(v[,2],by=list(e.next=v[,1]), tfun ) #aggregate e.next sums
+					tt=as.matrix(tt) #convert to matrix for indexing purposes
+					tt[,3] = tt[,3] -1 #we need to remove duplications of e.next flow so first remove 1 from counts so that where there is only a single flow nothing will be removed
+					tt[,2] = tt[,2] - tt[,3] * get.edge.attribute(gt, coi, tt[,'e.next']) #remove the number of e.next flows that it has been duplicated
+					v = tt #set v = tt[,1:2] as it has been corrected for flows
+
+				}
+				gt=set.edge.attribute(gt, coi, v[,'e.next'],v[,2])
 			}
 		}
 		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
