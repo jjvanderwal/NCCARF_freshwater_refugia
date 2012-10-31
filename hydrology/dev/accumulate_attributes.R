@@ -71,7 +71,8 @@ accum = function(gt,cois) {
 			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
 			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])))) #get an index of the next down edges
 			next_edge=unique(next_edge);
-			next_edge=matrix(next_edge,ncol=4); colnames(next_edge) = c("e.from","from","to","e.next")
+			next_edge=next_edge[which(next_edge[,4]>0),];next_edge=matrix(next_edge,ncol=4);
+			colnames(next_edge) = c("e.from","from","to","e.next")
 			for (coi in cois) {
 				v=cbind(next_edge[,'e.next'],get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from'])) #creates a 2 colmn matrix of next edge id and the accumulated value -- needed to deal with 2 or more flows going into a single node
 				colnames(v)=c('e.next','acc')
