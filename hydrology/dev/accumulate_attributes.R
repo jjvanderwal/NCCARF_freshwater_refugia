@@ -2,6 +2,7 @@
 #GNU General Public License .. feel free to use / distribute ... no warranties
 
 ################################################################################
+#module load R-2.15.1
 library(igraph); library(parallel) #load the necessary libraries
 
 #define inputs
@@ -9,6 +10,11 @@ input.dir='/home/jc246980/Hydrology.trials/Aggregate_reach/Output_futures/Qrun_a
 load(file=paste(input.dir,'Current_dynamic.Rdata',sep=''))
 attribute=Runoff  #rename object
 cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
+
+#define conditions
+use.proportion=FALSE 
+	#TRUE if proportion needs to be apportioned to bifurcations.  ie. runoff
+	#FALSE if upstream value should be the same for both bifurcations. ie. Area
 
 #define outputs
 out.dir='/home/jc246980/Hydrology.trials/' #define output directory
@@ -30,6 +36,7 @@ db = merge(db,attribute,all=TRUE) #merge data into db
 db[,cois]=db[,cois]*db$SegProp #Calculate local attribute attributed to each HydroID and overwrite SegNo attribute
 db = db[,c(11,12,1:10,13:ncol(db))] #reorder the columns
 db=db[which(is.finite(db[,cois[1]])),] #remove NAs (islands, etc)
+if (use.proportion==FALSE) db$BiProp=1
 rm(list=c("network","attribute","proportion")) #cleanup extra files
 
 ### create graph object and all possible subgraphs
