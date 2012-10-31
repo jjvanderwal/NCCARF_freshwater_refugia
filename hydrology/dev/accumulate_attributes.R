@@ -3,12 +3,13 @@
 
 ################################################################################
 #module load R-2.15.1
-library(igraph); library(parallel) #load the necessary libraries
+library(igraph); library(parallel);library(maptools) #load the necessary libraries
 
 #define inputs
-input.dir='/home/jc246980/Hydrology.trials/Aggregate_reach/Output_futures/Qrun_aggregated2reach_1976to2005/'
-load(file=paste(input.dir,'Current_dynamic.Rdata',sep=''))
-attribute=Runoff  #rename object
+input.dir='/home/jc246980/Hydrology.trials/'
+load(file=paste(input.dir,'Stream.accumulation.metrics.Rdata',sep=''))
+colnames(Info.table)=c("SegmentNo", "Annual_runoff", "AREA", "Cleared_veg_km", "Urban_km")
+attribute=Info.table[,c(1,2)] #rename object and just grab first two columns
 cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 
 #define conditions
@@ -69,7 +70,10 @@ accum = function(gt,cois) {
 		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
 			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
 			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
-			next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])))) #get an index of the next down edges
+			if(nrow(unique(next_edge))!=nrow(next_edge)) {
+				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=TRUE)) #get an index of the next down edges
+				}else{
+				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]]))))} #get an index of the next down edges
 			next_edge=unique(next_edge);
 			next_edge=next_edge[which(next_edge[,4]>0),];next_edge=matrix(next_edge,ncol=4);
 			colnames(next_edge) = c("e.from","from","to","e.next")
@@ -94,7 +98,7 @@ accum = function(gt,cois) {
 }
 
 ###do the actual accumulation
-ncore=4 #this number of cores seems most appropriate
+ncore=5 #this number of cores seems most appropriate
 cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running the analysis
 	print(system.time({ tout = parLapplyLB(cl,gg,accum, cois=cois) }))
 stopCluster(cl) #stop the cluster for analysis
