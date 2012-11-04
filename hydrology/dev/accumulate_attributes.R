@@ -13,7 +13,7 @@ attribute=Info.table[,c(1,2)] #rename object and just grab first two columns
 cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 
 #define conditions
-use.proportion=FALSE 
+use.proportion=TRUE
 	#TRUE if proportion needs to be apportioned to bifurcations.  ie. runoff
 	#FALSE if upstream value should be the same for both bifurcations. ie. Area
 
@@ -70,7 +70,7 @@ accum = function(gt,cois) {
 		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
 			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
 			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
-			if(nrow(unique(next_edge))!=nrow(next_edge)) {
+			if(nrow(unique(next_edge[,2:3]))==nrow(unique(next_edge))) {
 				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=TRUE)) #get an index of the next down edges
 				}else{
 				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]]))))} #get an index of the next down edges
