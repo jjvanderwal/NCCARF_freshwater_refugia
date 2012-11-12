@@ -27,23 +27,38 @@ proportion = read.csv(proportion.file,as.is=TRUE) #read in the proportionate dat
 stream.data = read.csv(data.file,as.is=TRUE) #read in the stream data to be summarized
 
 #prepare all data
-cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 db = merge(network,proportion[,c(1,4,5)],all=TRUE) #read in proportion rules and merge with network data
-attribute=as.data.frame(attribute) #convert attributes to dataframe
-attribute=attribute[which(attribute$SegmentNo %in% network$SegmentNo),] #remove extra SegmentNos
-attribute=na.omit(attribute)
-db = merge(db,attribute,all=TRUE) #merge data into db
+cois=colnames(stream.data)[-grep('SegmentNo',colnames(stream.data))] #define a vector of your colnames of interest
+stream.data=as.data.frame(stream.data) #convert attributes to dataframe
+stream.data=na.omit(stream.data[which(stream.data$SegmentNo %in% stream.data$SegmentNo),]) #remove extra SegmentNos and missing data
+db = merge(db,stream.data,all=TRUE) #merge data into db
 db[,cois]=db[,cois]*db$SegProp #Calculate local attribute attributed to each HydroID and overwrite SegNo attribute
 db = db[,c(11,12,1:10,13:ncol(db))] #reorder the columns
 db=db[which(is.finite(db[,cois[1]])),] #remove NAs (islands, etc)
 if (use.proportion==FALSE) db$BiProp=1
-rm(list=c("network","attribute","proportion")) #cleanup extra files
+rm(list=c("network","stream.data","proportion")) #cleanup extra files
 
 ### create graph object and all possible subgraphs
 g = graph.data.frame(db,directed=TRUE) #create the graph
 gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
-### do the accumulation
+############# remove when done testing
+cois = "our_local_annual_runoff"
+ii=36
+gt = gg[[ii]]
+plot(gt); dev.off()
+
+source(accum.function.file) #source the accumulation functions
+out = accum.runoff(gt,cois)
+
+gt = gg[[ii]]
+tt = cbind(E(gt)$HydroID,E(gt)$janet_annual_runoff,E(gt)$our_local_annual_runoff)
+colnames(tt) = c('HydroID','janets','ours')
+tt = merge(tt,out,all=TRUE)
+tt$diff = tt$our_local_annual_runoff/tt$janets
+
+for (ii in 1:100) cat(ii,'-',E(gg[[ii]])$BiProp,'\n')
+#############
 
 ###do the actual accumulation
 ncore=5 #this number of cores seems most appropriate

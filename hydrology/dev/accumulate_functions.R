@@ -16,26 +16,30 @@ accum.runoff = function(gt,cois) {
 		v.from.to = rbind(v.from.to,v.from.to) #allow for duplicate from-to nodes with separate SegmentNo
 		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
 		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,1]],V(gt)[v.from.to[,2]])),multi=TRUE) #get an index of the output edges from that vertex
-		eois = unique(eois); if (0 %in% eois) eois = eois[-which(eois==0)] #only keep unique eois
+		tt = which(eois==0) #identify edges that have no identity (e.g., 0 values)
+		if (length(tt)>0) { eois = eois[-tt]; v.from.to = v.from.to[-tt,] } #only keep eois and asociated v.from.to rows that have adges associated with them
+		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
 		tout=E(gt)$HydroID[eois] #prepare empty df to store attributes		
 		for (coi in cois){ tt=get.edge.attribute(gt,coi,eois); tout=cbind(tout,tt)} #store the attribute for the selected edges for each of the columns to be accumulated
 		colnames(tout)=c('HydroID',cois) #name the columns	
 		out = rbind(out,tout) #store the attribute for the current edges
+		
 		
 		suppressWarnings({ 
 			tt = cbind(eois, do.call("rbind", neighborhood(gt,1,V(gt)[v.from.to[,2]],"out"))) #get the next down verticies from the current edges
 		})
 		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
 			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
-			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
-			if(nrow(unique(next_edge[,2:3]))==nrow(unique(next_edge))) {
-				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=TRUE)) #get an index of the next down edges
-				}else{
-				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]]))))} #get an index of the next down edges
-			next_edge=unique(next_edge);
-			next_edge=next_edge[which(next_edge[,4]>0),];next_edge=matrix(next_edge,ncol=4);
-			colnames(next_edge) = c("e.from","from","to","e.next")
-			for (coi in cois) {
+			next_edge = rbind(next_edge,next_edge) #allow for bifurcations
+			colnames(next_edge) = c("e.from","from","to") #add the column names
+			tt = cbind(next_edge[,c(2:3)],get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=TRUE)) #get an index of the next down edges
+			colnames(tt)[3] = "e.next" #assign the 3rd column name
+			if (length(which(tt[,3]==0))) tt = tt[-which(tt[,3]==0),] #remove the no next_down edge
+			if(is.null(dim(tt))) { tt=matrix(tt,ncol=3); colnames(tt) = c("from","to","e.next") } #ensure this is a matrix
+			next_edge = unique(next_edge) #keep the unique values
+			next_edge = merge(next_edge,tt) #merge the next edges with original edges
+			#print(next_edge)
+			for (coi in cois) { #cycle through each of the columns of interest
 				v=cbind(next_edge[,'e.next'],get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from'])) #creates a 2 colmn matrix of next edge id and the accumulated value -- needed to deal with 2 or more flows going into a single node
 				colnames(v)=c('e.next','acc')
 				if (nrow(v)!=length(unique(v[,1]))) { #do this if there is any duplicate net down edges
@@ -45,9 +49,8 @@ accum.runoff = function(gt,cois) {
 					tt[,3] = tt[,3] -1 #we need to remove duplications of e.next flow so first remove 1 from counts so that where there is only a single flow nothing will be removed
 					tt[,2] = tt[,2] - tt[,3] * get.edge.attribute(gt, coi, tt[,'e.next']) #remove the number of e.next flows that it has been duplicated
 					v = tt #set v = tt[,1:2] as it has been corrected for flows
-
 				}
-				gt=set.edge.attribute(gt, coi, v[,'e.next'],v[,2])
+				gt=set.edge.attribute(gt, coi, v[,'e.next'],v[,2]) #append the new aggregated flows to the next down edges
 			}
 		}
 		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
