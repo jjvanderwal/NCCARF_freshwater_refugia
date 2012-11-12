@@ -2,33 +2,32 @@
 #GNU General Public License .. feel free to use / distribute ... no warranties
 
 ################################################################################
-#module load R-2.15.1
-library(igraph); library(parallel);library(maptools) #load the necessary libraries
+#required to run ... module load R-2.15.1
 
-#define inputs
-input.dir='/home/jc246980/Hydrology.trials/'
-load(file=paste(input.dir,'Stream.accumulation.metrics.Rdata',sep=''))
-colnames(Info.table)=c("SegmentNo", "Annual_runoff", "AREA", "Cleared_veg_km", "Urban_km")
-attribute=Info.table[,c(1,2)] #rename object and just grab first two columns
-cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
+### read in the necessary info
+args=(commandArgs(TRUE)) #get the command line arguements
+for(i in 1:length(args)) { eval(parse(text=args[[i]])) } #evaluate the arguments
 
-#define conditions
-use.proportion=TRUE
-	#TRUE if proportion needs to be apportioned to bifurcations.  ie. runoff
-	#FALSE if upstream value should be the same for both bifurcations. ie. Area
+### sample data 
+proportionate.accumulation=FALSE #false is accumulate area; true is accumulation runnoff
+wd = "/home/jc165798/working/NARP_hydro/flow_accumulation/" #define the working directory
+data.file="/home/jc165798/working/NARP_hydro/flow_accumulation/area_runoff.csv" #define the name of the data file
+network.file="/home/jc165798/working/NARP_hydro/flow_accumulation/NetworkAttributes.csv" #define the name of the network attribute data file
+proportion.file="/home/jc165798/working/NARP_hydro/flow_accumulation/proportion.csv" #define the name of the proportionate attribute data file
+accum.function.file="/home/jc165798/SCRIPTS/git_code/NCCARF_freshwater_refugia/hydrology/dev/accumulate_functions.R" #define the location of the accumulation functions
 
-#define outputs
-out.dir='/home/jc246980/Hydrology.trials/' #define output directory
-filename='accumulate_months' #name your file
 ################################################################################
-
-wd = "/home/jc165798/working/NARP_hydro/flow_accumulation/"; setwd(wd) #define and set working directory
+library(igraph); library(parallel) #load the necessary libraries
+source(accum.function.file) #source the accumulation functions
+setwd(wd) #define and set working directory
 
 ###read in necessary data
-network = read.csv('NetworkAttributes.csv',as.is=TRUE) #read in the data
-proportion = read.csv('proportion.csv',as.is=TRUE)
+network = read.csv(network.file,as.is=TRUE) #read in the netowrk attribute data
+proportion = read.csv(proportion.file,as.is=TRUE) #read in the proportionate data
+stream.data = read.csv(data.file,as.is=TRUE) #read in the stream data to be summarized
 
 #prepare all data
+cois=colnames(attribute)[-grep('SegmentNo',colnames(attribute))] #define a vector of your colnames of interest
 db = merge(network,proportion[,c(1,4,5)],all=TRUE) #read in proportion rules and merge with network data
 attribute=as.data.frame(attribute) #convert attributes to dataframe
 attribute=attribute[which(attribute$SegmentNo %in% network$SegmentNo),] #remove extra SegmentNos
@@ -45,57 +44,6 @@ g = graph.data.frame(db,directed=TRUE) #create the graph
 gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
 ### do the accumulation
-#function to accumulate info in each subgraph in a full graph
-accum = function(gt,cois) { 
-	require(igraph)
-	out=NULL #define the output
-	while(length(E(gt))>0) { #loop until all edges are dealt with
-		vois = which(degree(gt,mode="in")==0) #get index of the headwater vertices
-		suppressWarnings({ 
-			tt = do.call("rbind", neighborhood(gt,1,V(gt)[vois],"out")) #get the index of the from & to nodes for each edge in a list
-		})
-		v.from.to = NULL; for (ii in 2:ncol(tt)) v.from.to = rbind(v.from.to,tt[,c(1,ii)]) #flatten the list to a matrix and setup for next cleaning
-		v.from.to = rbind(v.from.to,v.from.to) #allow for duplicate from-to nodes with separate SegmentNo
-		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
-		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,1]],V(gt)[v.from.to[,2]])),multi=TRUE) #get an index of the output edges from that vertex
-		eois = unique(eois); if (0 %in% eois) eois = eois[-which(eois==0)] #only keep unique eois
-		tout=E(gt)$HydroID[eois] #prepare empty df to store attributes		
-		for (coi in cois){ tt=get.edge.attribute(gt,coi,eois); tout=cbind(tout,tt)} #store the attribute for the selected edges for each of the columns to be accumulated
-		colnames(tout)=c('HydroID',cois) #name the columns	
-		out = rbind(out,tout) #store the attribute for the current edges
-		
-		suppressWarnings({ 
-			tt = cbind(eois, do.call("rbind", neighborhood(gt,1,V(gt)[v.from.to[,2]],"out"))) #get the next down verticies from the current edges
-		})
-		if ((length(dim(tt))<1 & length(tt)>2) | (length(dim(tt))>0 & ncol(tt)>2)) { #only do this if there is something down stream	
-			next_edge = NULL; for (ii in 3:ncol(tt)) next_edge = rbind(next_edge,tt[,c(1,2,ii)]) #flatten the list to a matrix and setup for next cleaning
-			if (is.null(dim(next_edge))) next_edge = matrix(next_edge,ncol=3) #ensure v.from.to is a matrix
-			if(nrow(unique(next_edge[,2:3]))==nrow(unique(next_edge))) {
-				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]])),multi=TRUE)) #get an index of the next down edges
-				}else{
-				next_edge = cbind(next_edge,get.edge.ids(gt,t(cbind(V(gt)[next_edge[,2]],V(gt)[next_edge[,3]]))))} #get an index of the next down edges
-			next_edge=unique(next_edge);
-			next_edge=next_edge[which(next_edge[,4]>0),];next_edge=matrix(next_edge,ncol=4);
-			colnames(next_edge) = c("e.from","from","to","e.next")
-			for (coi in cois) {
-				v=cbind(next_edge[,'e.next'],get.edge.attribute(gt, coi, next_edge[,'e.next']) + E(gt)$BiProp[next_edge[,"e.next"]] * get.edge.attribute(gt, coi, next_edge[,'e.from'])) #creates a 2 colmn matrix of next edge id and the accumulated value -- needed to deal with 2 or more flows going into a single node
-				colnames(v)=c('e.next','acc')
-				if (nrow(v)!=length(unique(v[,1]))) { #do this if there is any duplicate net down edges
-					tfun = function(x) {return(c(sum(x),length(x)))} #define a aggregate function to get sums for e.next and a count
-					tt = aggregate(v[,2],by=list(e.next=v[,1]), tfun ) #aggregate e.next sums
-					tt=as.matrix(tt) #convert to matrix for indexing purposes
-					tt[,3] = tt[,3] -1 #we need to remove duplications of e.next flow so first remove 1 from counts so that where there is only a single flow nothing will be removed
-					tt[,2] = tt[,2] - tt[,3] * get.edge.attribute(gt, coi, tt[,'e.next']) #remove the number of e.next flows that it has been duplicated
-					v = tt #set v = tt[,1:2] as it has been corrected for flows
-
-				}
-				gt=set.edge.attribute(gt, coi, v[,'e.next'],v[,2])
-			}
-		}
-		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
-	}
-	return(out)
-}
 
 ###do the actual accumulation
 ncore=5 #this number of cores seems most appropriate
