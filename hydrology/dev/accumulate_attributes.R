@@ -42,11 +42,32 @@ rm(list=c("network","stream.data","proportion")) #cleanup extra files
 g = graph.data.frame(db,directed=TRUE) #create the graph
 gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
+###runoff accumulation
+###do the actual accumulation
+ncore=5 #this number of cores seems most appropriate
+cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running the analysis
+	print(system.time({ tout = parLapplyLB(cl,gg,accum.runoff, cois=cois) }))
+stopCluster(cl) #stop the cluster for analysis
+
+###need to store the outputs
+out = do.call("rbind",tout) #aggregate the list into a single matrix
+db2 = merge(db,out) #merge this back into the overall database
+
+write.csv(out,paste(out.dir,filename,'.csv',sep=''),row.names=F)
+
+###area accumulation
+
 ############# remove when done testing
-cois = "our_local_annual_runoff"
+cois = "local_area"
 ii=36
 gt = gg[[ii]]
 plot(gt); dev.off()
+
+tt = graph.strength(gt,mode="in",weights=E(gt)$local_area)
+tt = data.frame(HydroID=names(tt),accum_area=tt)
+tt2 = data.frame(HydroID=E(gt)$HydroID,local_area=E(gt)$local_area,cat_area=E(gt)$cat_area)
+
+
 
 source(accum.function.file) #source the accumulation functions
 out = accum.runoff(gt,cois)
@@ -60,14 +81,4 @@ tt$diff = tt$our_local_annual_runoff/tt$janets
 for (ii in 1:100) cat(ii,'-',E(gg[[ii]])$BiProp,'\n')
 #############
 
-###do the actual accumulation
-ncore=5 #this number of cores seems most appropriate
-cl <- makeCluster(getOption("cl.cores", ncore))#define the cluster for running the analysis
-	print(system.time({ tout = parLapplyLB(cl,gg,accum, cois=cois) }))
-stopCluster(cl) #stop the cluster for analysis
 
-###need to store the outputs
-out = do.call("rbind",tout) #aggregate the list into a single matrix
-db2 = merge(db,out) #merge this back into the overall database
-
-write.csv(out,paste(out.dir,filename,'.csv',sep=''),row.names=F)
