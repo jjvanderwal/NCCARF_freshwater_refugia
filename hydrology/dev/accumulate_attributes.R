@@ -63,22 +63,26 @@ ii=36
 gt = gg[[ii]]
 plot(gt); dev.off()
 
-tt = graph.strength(gt,mode="in",weights=E(gt)$local_area)
-tt = data.frame(HydroID=names(tt),accum_area=tt)
-tt2 = data.frame(HydroID=E(gt)$HydroID,local_area=E(gt)$local_area,cat_area=E(gt)$cat_area)
+out = accum.area(gt,cois)
+tt = cbind(E(gt)$HydroID,E(gt)$"cat_area");colnames(tt) = c('HydroID','cat_area')
+tt = merge(tt,out,all=TRUE)
+
+for (ii in 1:1000) (out = accum.area(gg[[ii]],cois))
 
 
-
-source(accum.function.file) #source the accumulation functions
-out = accum.runoff(gt,cois)
-
+cois = "our_local_annual_runoff"
+ii = 10617
+out = accum.runoff(gg[[ii]],"our_local_annual_runoff")
 gt = gg[[ii]]
 tt = cbind(E(gt)$HydroID,E(gt)$janet_annual_runoff,E(gt)$our_local_annual_runoff)
 colnames(tt) = c('HydroID','janets','ours')
 tt = merge(tt,out,all=TRUE)
 tt$diff = tt$our_local_annual_runoff/tt$janets
+tt$diff2 = tt$ours/tt$janets
 
 for (ii in 1:100) cat(ii,'-',E(gg[[ii]])$BiProp,'\n')
 #############
 
+for (ii in 1:1000) {out = accum.runoff(gg[[ii]],"our_local_annual_runoff"); if (!all(is.finite(as.vector(out)))) cat(ii,'\n') }
+for(ii in 1:length(gg)) { if(length(E(gg[[ii]]))>200000) cat(ii,'-',length(E(gg[[ii]])),'\n') }
 

@@ -57,3 +57,37 @@ accum.runoff = function(gt,cois) {
 	}
 	return(out)
 }
+
+#function to accumulate area
+accum.area = function(gt,cois) { 
+	require(igraph)
+	sum.area = function(x,graph,cois) { #define a function to sum area above a vertex
+		tgraph = induced.subgraph(graph, vids=subcomponent(graph, V(graph)[x], mode = "in")) #create a subgraph from upstream vertices
+		tout = c(from=x) #define the from node
+		for (coi in cois) tout = c(tout,sum(get.edge.attribute(tgraph,coi),na.rm=TRUE)) #sum the variables for each column of interest
+		return(tout) 
+	} 
+	out=NULL #define the output
+	while(length(E(gt))>0) { #loop until all edges are dealt with
+		vois = which(degree(gt,mode="out")==0) #get index of the lowest reaches
+		suppressWarnings({ 
+			tt = do.call("rbind", neighborhood(gt,1,V(gt)[vois],"in")) #get the index of the from & to nodes for each edge in a list
+		})
+		v.from.to = NULL; for (ii in 2:ncol(tt)) v.from.to = rbind(v.from.to,tt[,c(1,ii)]) #flatten the list to a matrix and setup for next cleaning
+		v.from.to = rbind(v.from.to,v.from.to) #allow for duplicate from-to nodes with separate SegmentNo
+		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
+		eois = get.edge.ids(gt,t(cbind(V(gt)[v.from.to[,2]],V(gt)[v.from.to[,1]])),multi=TRUE) #get an index of the output edges from that vertex
+		tt = which(eois==0) #identify edges that have no identity (e.g., 0 values)
+		if (length(tt)>0) { eois = eois[-tt]; v.from.to = v.from.to[-tt,] } #only keep eois and asociated v.from.to rows that have adges associated with them
+		if (is.null(dim(v.from.to))) v.from.to = matrix(v.from.to,ncol=2) #ensure v.from.to is a matrix
+		v.from.to = cbind(v.from.to[,2],eois); colnames(v.from.to) = c('from','eois') #correct the from.to matrix for order and add the edge to v.from.to
+		area.above = do.call("rbind",lapply(unique(v.from.to[,1]), sum.area , graph=gt, cois = cois)) #get the area above the edges of interest
+		colnames(area.above) = c('from',cois) #define the column names
+		v.from.to = merge(v.from.to,area.above) #merge the areas onto here
+		for (coi in cois) v.from.to[,coi] = v.from.to[,coi] + get.edge.attribute(gt,coi,v.from.to[,'eois'])
+		tout = data.frame(HydroID=E(gt)$HydroID[v.from.to[,'eois']],v.from.to[,cois]); colnames(tout) = c('HydroID',cois) #create a tmp output file
+		out = rbind(out,tout) #append the data
+		gt = delete.vertices(gt, V(gt)[vois]) #remove the vois
+	}
+	return(out)
+}
