@@ -8,7 +8,7 @@ GCMs = list.files(paste(futdir,ESs[1],sep=''))	# get a list of GCMs
 YEAR=seq(2015, 2085, 10)	
 
 sh.dir='/home/jc148322/scripts/NARP_freshwater/SDM/prep_data.sh/'; setwd(sh.dir)
-for (es in ESs) {
+for (es in ESs[2:4]) {
 	for (gcm in GCMs) {			
 		for (yy in YEAR) {
 			zz = file(paste('02.',es,'.',gcm,'.',yy,'.prep_data.sh',sep=''),'w')

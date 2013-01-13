@@ -33,6 +33,14 @@ Enviro_dat=merge(bioclim,Enviro_dat, by='SegmentNo',all.x=TRUE)
 
 Enviro_dat=merge(Enviro_dat, HYDROLOGY, by="SegmentNo", all.x=TRUE)
 
+### Create a fake lat/lon from SegmentNo - maxent demands lat/lon
+	Enviro_dat=cbind(Enviro_dat[,1],Enviro_dat)
+
+### LABEL the future env layers with the exact same column names as current layers.  IMPORTANT!
+	tt=c('lat','long',paste('bioclim_',sprintf('%02i',c(1:19)),sep=""),"num.month", "total.severity", "max.clust.length","clust.severity", "month.max.clust", 'MeanAnnual')
+	
+	colnames(Enviro_dat)=tt
+
 out.dir ="/home/jc148322/NARPfreshwater/SDM/Env_layers/"
 write.csv(Enviro_dat,paste(out.dir,"current.csv",sep=''),row.names=F)
 

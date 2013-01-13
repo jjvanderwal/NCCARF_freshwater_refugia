@@ -4,7 +4,7 @@
 library(SDMTools) #define the libraries needed
 
 occur.file="/home/jc246980/Zonation/Fish_reach_aggregated.Rdata" #give the full file path of your species data
-env.file="/home/jc148322/NARPfreshwater/SDM/Env_layers/current.csv"
+env.file="/home/jc148322/NARPfreshwater/SDM/Env_layers/current.Rdata"
 maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar" #define the location of the maxent.jar file
 
 wd="/home/jc148322/NARPfreshwater/SDM/";setwd(wd)
@@ -12,13 +12,14 @@ wd="/home/jc148322/NARPfreshwater/SDM/";setwd(wd)
 
 ###1. Read in current environmental layers
 
-current=read.csv('current.csv',as.is=TRUE)
-env.vars=colnames(current) #get the names and locations (lat, long columns) of the environmental variables to be modelled, for subsetting later
-
+load(env.file) #load the current environmental layers file. The object is named 'current'
+env.vars=colnames(current)
+to.remove=c('lat','long','bioclim_02','bioclim_03','bioclim_07','bioclim_16','total.severity','num.month.contribution')
+env.vars=setdiff(env.vars,to.remove)
 
 ###2. Load species occurrence data
-occur.file=load(occur.file)
-occur=get(occur.file) #rename species occurrence data to 'occur'
+occur=load(occur.file)
+occur=get(occur) #rename species occurrence data to 'occur'
 species=colnames(occur); species=species[-grep('SegmentNo',species)] #get species names, to loop through later
 
 
@@ -44,23 +45,26 @@ write.csv(bkgd,'bkgd.csv',row.names=FALSE) #write out your target group backgrou
 
 ###6. Cycle through each species and submit jobs to be modelled
 
-for (spp in species[70:length(species)]) { cat(spp,'\n')
+for (spp in species[1:10]) { cat(spp,'\n')
 	if(nrow(occur[which(occur[,spp]>0),])>0) { #check that there are presence records for the species
-	toccur = cbind(spp,occur[which(occur[,spp]>0),env.vars]) #get the observations for the species - get only the rows with occurrences (>0), and the environmental variables
+	toccur = cbind(spp,occur[which(occur[,spp]>0),c('lat','long',env.vars)]) #get the observations for the species - get only the rows with occurrences (>0), and the environmental variables
 
 	if (nrow(toccur)<10) { #if there are fewer records than 10, do not model the species
 	} else { #else model the species
 	spp.dir = paste(wd,'models/',spp,'/',sep='') #define the species directory
 	dir.create(paste(spp.dir,'output',sep=''),recursive=TRUE) #create the species directory
-	write.csv(toccur,paste(spp.dir,'occur.csv',sep=''),row.names=FALSE) #write out the file
+	
+	write.csv(toccur,paste(spp.dir,'occur_SegNo.csv',sep=''),row.names=FALSE) #write out the file
+	toccur=toccur[,c('spp',env.vars)]
+	write.csv(toccur,paste(spp.dir,'occur.csv',sep=''),row.names=FALSE) #write out modelling file
 	 
-	#create the shell script which will run the modelling jobs
+	# create the shell script which will run the modelling jobs
 	zz = file(paste(spp.dir,'01.',spp,'.model.sh',sep=''),'w') #create the shell script to run the maxent model
 		cat('#!/bin/bash\n',file=zz)
 		cat('cd ',spp.dir,'\n',sep='',file=zz)
 		cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
 		cat('module load java\n',file=zz)
-		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
+		# cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
 		cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
 		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings  responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -P -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
 	close(zz)
