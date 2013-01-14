@@ -1,4 +1,4 @@
-
+library(igraph)
 wd="/home/jc148322/NARPfreshwater/SDM/models/";setwd(wd)
 
 network.file="/home/jc165798/working/NARP_hydro/flow_accumulation/NetworkAttributes.csv" #define the name of the 
