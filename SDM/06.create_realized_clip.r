@@ -20,7 +20,7 @@ g = graph.data.frame(db,directed=TRUE) #create the graph
 gg = decompose.graph(g,"weak") #break the full graph into 10000 + subgraphs
 
 for (spp in species) { cat(spp,'\n')
-	spp.dir=paste(wd,spp,'/output/',sep='')
+	spp.dir=paste(wd,spp,'/output/',sep=''); dir.create(spp.dir, recursive=TRUE)
 	clip=NULL
 	counter=0
 	for (i in 1:length(gg)){
