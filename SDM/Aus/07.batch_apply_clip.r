@@ -3,7 +3,7 @@
 wd='/home/jc148322/NARPfreshwater/SDM/models/';
 species=list.files(wd)
 
-for (spp in species) {
+for (spp in species[1:10]) {
 	spp.dir=paste(wd,spp,'/',sep=''); setwd(spp.dir)
 		zz = file(paste('07.',spp,'.clip.sh',sep=''),'w')
 		 cat('#!/bin/bash\n',file=zz)

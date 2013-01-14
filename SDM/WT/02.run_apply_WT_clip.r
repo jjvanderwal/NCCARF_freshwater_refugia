@@ -11,7 +11,7 @@ files=c('current.csv',files[intersect(grep('RCP85',files),grep('2085',files))])
 
 for (tfile in files) { cat(tfile,'\n')
 	tdata=read.csv(paste(spp.dir,'realized/',tfile,sep=''))
-	tdata[which(!(tdata[,1] %in% clip[,1])),3]=0	
+	tdata=tdata[which(tdata[,1] %in% clip[,1]),]	
 	write.csv(tdata,paste(out.dir,'/',tfile,sep=''),row.names=FALSE)
 	
 	}

@@ -45,7 +45,7 @@ write.csv(bkgd,'bkgd.csv',row.names=FALSE) #write out your target group backgrou
 
 ###6. Cycle through each species and submit jobs to be modelled
 
-for (spp in species[1:10]) { cat(spp,'\n')
+for (spp in species[11:length(species)]) { cat(spp,'\n')
 	if(nrow(occur[which(occur[,spp]>0),])>0) { #check that there are presence records for the species
 	toccur = cbind(spp,occur[which(occur[,spp]>0),c('lat','long',env.vars)]) #get the observations for the species - get only the rows with occurrences (>0), and the environmental variables
 

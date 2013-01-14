@@ -6,12 +6,15 @@ proj.dir = '/home/jc148322/NARPfreshwater/SDM/Env_layers/'
 maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar"
 
 proj.list=list.files(proj.dir,pattern='RCP')
+
+#subset proj.list, if required
+proj.list=intersect(grep("RCP85",proj.list,value=T),grep("2085",proj.list,value=T))
 proj.list=c('current.csv',proj.list)
 
 species = list.files(wd) #get a list of species
 
 #cycle through each of the species
-for (spp in species) { cat(spp,'\n')
+for (spp in species[1:10]) { cat(spp,'\n')
 	spp.dir = paste(wd,spp,'/',sep=''); setwd(spp.dir) #set the working directory to the species directory
 	
 	lambdas.file=paste('output/',spp,'.lambdas',sep='')
