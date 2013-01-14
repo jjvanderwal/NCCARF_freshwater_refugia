@@ -35,16 +35,5 @@ for (spp in species) { cat(spp,'\n')
 	
 	out.dir=paste(spp.dir,'realized/',sep=''); dir.create(out.dir); setwd(out.dir)
 	write.csv(clip,'realized.clip.csv',row.names=F)
-	
-	files=list.files(paste(spp.dir,'projection/',sep=''))
-	
-	for (tfile in files) { cat('make realized distribution\n')
-		tdata=read.csv(paste(spp.dir,'projection/',tfile,sep=''))
-		tdata[which(!(tdata[,1] %in% clip[,1])),3]=0	
-		write.csv(tdata,tfile,row.names=FALSE)
-		
-		}
-		
-	
-	
+
 }

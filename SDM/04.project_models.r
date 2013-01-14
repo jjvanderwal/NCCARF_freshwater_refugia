@@ -25,7 +25,7 @@ for (spp in species) { cat(spp,'\n')
 		cat('module load java\n',file=zz)
 		dir.create('output/projection/',recursive=TRUE) #create the output directory for all maps
 		#cycle through the projections
-		for (tproj in proj.list[1]) cat('java -mx2048m -cp ',maxent.jar,' density.Project ',spp.dir,'output/',spp,'.lambdas ',proj.dir,tproj,' ',spp.dir,'output/projection/',tproj,' fadebyclamping nowriteclampgrid\n',sep="",file=zz)
+		for (tproj in proj.list[2:length(proj.list)]) cat('java -mx2048m -cp ',maxent.jar,' density.Project ',spp.dir,'output/',spp,'.lambdas ',proj.dir,tproj,' ',spp.dir,'output/projection/',tproj,' fadebyclamping nowriteclampgrid\n',sep="",file=zz)
 
 		
 	close(zz)
