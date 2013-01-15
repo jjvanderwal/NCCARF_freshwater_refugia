@@ -22,7 +22,7 @@ species=rownames(count); species=species[-1]
 species=intersect(species,list.files(wd)) #only get species that have been modelled
 
 
-for (spp in species[1:5]) { 
+for (spp in species) { 
 	spp.dir=paste(wd,spp,'/',sep=''); setwd(spp.dir)
 		zz = file(paste('05.',spp,'.images.sh',sep=''),'w')
 		 cat('#!/bin/bash\n',file=zz)
