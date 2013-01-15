@@ -1,7 +1,7 @@
 wd='/home/jc148322/NARPfreshwater/SDM/models/';
 
 
-###1. Load species occurrence data
+###1. Determine which species are WT species - Load species occurrence data
 occur.file="/home/jc246980/Zonation/Fish_reach_aggregated.Rdata" #give the full file path of your species data
 occur=load(occur.file)
 occur=get(occur) #rename species occurrence data to 'occur'
@@ -24,14 +24,14 @@ species=intersect(species,list.files(wd)) #only get species that have been model
 
 for (spp in species) { 
 	spp.dir=paste(wd,spp,'/',sep=''); setwd(spp.dir)
-		zz = file(paste('03.',spp,'.median.sh',sep=''),'w')
+		zz = file(paste('04.',spp,'.asciis.sh',sep=''),'w')
 		 cat('#!/bin/bash\n',file=zz)
 		 cat('cd $PBS_O_WORKDIR\n',file=zz)
 		 cat('source /etc/profile.d/modules.sh\n',file=zz)
 		 cat('module load R-2.15.1\n',file=zz)
-		 cat("R CMD BATCH --no-save --no-restore '--args spp=\"",spp,"\" ' /home/jc148322/scripts/NARP_freshwater/SDM/03.run_median.r 03.",spp,'.median.Rout \n',sep='',file=zz) #run the R script in the background
+		 cat("R CMD BATCH --no-save --no-restore '--args spp=\"",spp,"\" ' /home/jc148322/scripts/NARP_freshwater/SDM/WT/potential/04.run_make_asciis.r 04.",spp,'.asciis.Rout \n',sep='',file=zz) #run the R script in the background
 	close(zz) 
 
 	##submit the script
-	system(paste('qsub -l nodes=1:ppn=1 03.',spp,'.median.sh',sep=''))
+	system(paste('qsub -l nodes=1:ppn=1 04.',spp,'.asciis.sh',sep=''))
 }
