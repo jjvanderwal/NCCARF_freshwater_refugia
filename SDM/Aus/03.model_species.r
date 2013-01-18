@@ -13,10 +13,7 @@ wd="/home/jc148322/NARPfreshwater/SDM/";setwd(wd)
 ###1. Read in current environmental layers
 
 load(env.file) #load the current environmental layers file. The object is named 'current'
-env.vars=colnames(current)
-to.remove=c('lat','long','bioclim_02','bioclim_03','bioclim_07','bioclim_16','total.severity','num.month.contribution')
-env.vars=setdiff(env.vars,to.remove)
-
+env.vars=c(paste('bioclim_',sprintf('%02i',c(1,4,5,6,12,15,16,17)),sep=''),'max.clust.length','clust.severity','MeanAnnual')
 ###2. Load species occurrence data
 occur=load(occur.file)
 occur=get(occur) #rename species occurrence data to 'occur'
@@ -45,7 +42,7 @@ write.csv(bkgd,'bkgd.csv',row.names=FALSE) #write out your target group backgrou
 
 ###6. Cycle through each species and submit jobs to be modelled
 
-for (spp in species[11:length(species)]) { cat(spp,'\n')
+for (spp in species) { cat(spp,'\n')
 	if(nrow(occur[which(occur[,spp]>0),])>0) { #check that there are presence records for the species
 	toccur = cbind(spp,occur[which(occur[,spp]>0),c('lat','long',env.vars)]) #get the observations for the species - get only the rows with occurrences (>0), and the environmental variables
 
@@ -64,8 +61,8 @@ for (spp in species[11:length(species)]) { cat(spp,'\n')
 		cat('cd ',spp.dir,'\n',sep='',file=zz)
 		cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
 		cat('module load java\n',file=zz)
-		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
-		cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
+		# cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
+		# cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
 		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings  responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -P -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
 	close(zz)
 	setwd(spp.dir); system(paste('qsub -m n 01.',spp,'.model.sh',sep='')); setwd(wd) #submit the script
