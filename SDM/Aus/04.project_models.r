@@ -1,17 +1,17 @@
 ################################################################################
 ###To project the models###
 
-wd = '/home/jc148322/NARPfreshwater/SDM/models/' #your /models/ directory
+wd = '/home/jc148322/NARPfreshwater/SDM/Fish/models/' #your /models/ directory
 proj.dir = '/home/jc148322/NARPfreshwater/SDM/Env_layers/'
 maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar"
 
 proj.list=list.files(proj.dir,pattern='RCP')
 
 #subset proj.list, if required
-proj.list=intersect(grep("RCP85",proj.list,value=T),grep("2025",proj.list,value=T))
+# proj.list=proj.list[-grep('RCP85',proj.list)]
 proj.list=c('current.csv',proj.list)
 species = list.files(wd) #get a list of species
-
+species=species[c(140,149)]
 #cycle through each of the species
 for (spp in species) { cat(spp,'\n')
 	spp.dir = paste(wd,spp,'/',sep=''); setwd(spp.dir) #set the working directory to the species directory

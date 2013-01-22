@@ -28,29 +28,29 @@ asciis=list.files('/home/jc148322/NARPfreshwater/SDM/models/Acanthopagrus_berda/
 asciis=asciis[-1]
 gcms=unique(sapply(strsplit(asciis,'_'),'[',2))
 years=unique(sapply(strsplit(asciis,'_'),'[',3)); years=gsub('.asc.gz','',years)
-
+gcms=c('median','diff')
 
 
 for (gcm in gcms){
 
 	dir.create(paste(out.dir,gcm,'/',sep=''),recursive=TRUE)
 
-	for (spp in species) {
+	for (spp in species[2:length(species)]) {
 		spp.dir=paste(wd, spp,'/output/asciis/',sep=''); setwd(spp.dir)
-		for (yr in years){
+		 for (yr in years){
 			system(paste('cp ',spp.dir,'WT_realized/RCP85_',gcm,'_',yr,'.asc.gz ',out.dir,gcm,'/',sep=''))
 			system(paste('mv ',out.dir,gcm,'/RCP85_',gcm,'_',yr,'.asc.gz ',out.dir,gcm,'/',spp,'_',yr,'.asc.gz',sep=''))
 			system(paste('gzip -d ',out.dir,gcm,'/',spp,'_',yr,'.asc.gz',sep=''))
-		}
+		 }
 	}
 }
 
-dir.create(paste(out.'current/',sep=''),recursive=TRUE)
+dir.create(paste(out.dir,'current/',sep=''),recursive=TRUE)
 for (spp in species) {
 	spp.dir=paste(wd, spp,'/output/asciis/',sep=''); setwd(spp.dir)
 
 	system(paste('cp ',spp.dir,'WT_realized/current.asc.gz ',out.dir,'current/',sep=''))
-	system(paste('mv ',out.dir,gcm,'/current.asc.gz ',out.dir,'current/',spp,'.asc.gz',sep=''))
+	system(paste('mv ',out.dir,'current/current.asc.gz ',out.dir,'current/',spp,'.asc.gz',sep=''))
 	system(paste('gzip -d ',out.dir,'current/',spp,'.asc.gz',sep=''))
 
 	}

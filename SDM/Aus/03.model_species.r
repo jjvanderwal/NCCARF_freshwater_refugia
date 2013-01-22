@@ -3,11 +3,11 @@
 ### Define inputs, working directories and necessary libraries
 library(SDMTools) #define the libraries needed
 
-occur.file="/home/jc246980/Zonation/Fish_reach_aggregated.Rdata" #give the full file path of your species data
+occur.file="/home/jc246980/Species_data/Reach_data/Fish_reach_master.Rdata" #give the full file path of your species data
 env.file="/home/jc148322/NARPfreshwater/SDM/Env_layers/current.Rdata"
 maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar" #define the location of the maxent.jar file
 
-wd="/home/jc148322/NARPfreshwater/SDM/";setwd(wd)
+wd="/home/jc148322/NARPfreshwater/SDM/Fish/";dir.create(wd);setwd(wd)
 ########################################################################################################
 
 ###1. Read in current environmental layers
@@ -61,8 +61,8 @@ for (spp in species) { cat(spp,'\n')
 		cat('cd ',spp.dir,'\n',sep='',file=zz)
 		cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
 		cat('module load java\n',file=zz)
-		# cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
-		# cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
+		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
+		cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
 		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings  responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -P -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
 	close(zz)
 	setwd(spp.dir); system(paste('qsub -m n 01.',spp,'.model.sh',sep='')); setwd(wd) #submit the script
