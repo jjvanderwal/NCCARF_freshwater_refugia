@@ -12,8 +12,8 @@ VOIS=c("num.month", "total.severity", "max.clust.length","clust.severity", "mont
 
 ### Create annual means and fill in accumulated flow gaps
 
-hydro$MeanAnnual=rowMeans(hydro[,2:13])
-Runoff$MeanAnnual=rowMeans(Runoff[,2:13])
+hydro$MeanAnnual=rowSums(hydro[,2:13])
+Runoff$MeanAnnual=rowSums(Runoff[,2:13])
 hydro_extra=Runoff[which(!(Runoff$SegmentNo %in% hydro$SegmentNo)),]   
 HYDRO=hydro[,c(1,14)]
 HYDRO_EXTRA=hydro_extra[, c(1,14)]
@@ -44,3 +44,7 @@ Enviro_dat=merge(Enviro_dat, HYDROLOGY, by="SegmentNo", all.x=TRUE)
 out.dir ="/home/jc148322/NARPfreshwater/SDM/Env_layers/"
 write.csv(Enviro_dat,paste(out.dir,"current.csv",sep=''),row.names=F)
 
+# also save it as Rdata
+setwd(out.dir)
+current=Enviro_dat
+save(current,file='current.Rdata')

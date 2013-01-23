@@ -8,9 +8,9 @@ for(i in 1:length(args)) { eval(parse(text=args[[i]])) } #evaluate the arguments
 
 ###check if file exists
 out.dir ="/home/jc148322/NARPfreshwater/SDM/Env_layers/"
-tfile=paste(out.dir,es,"_",gcm,"_",yy,".csv",sep='')
-if (file.exists(tfile)) {
-} else {
+# tfile=paste(out.dir,es,"_",gcm,"_",yy,".csv",sep='')
+# if (file.exists(tfile)) {
+# } else {
 
 
 library(SDMTools)
@@ -27,7 +27,7 @@ wd ="/home/jc246980/Hydrology.trials/Accumulated_reach/Output_futures/Qrun_accum
 
 current_dynamic=read.csv(paste(wd, "Current_dynamic.csv", sep=''))
 current_static=read.csv(paste(wd, "Current_static.csv", sep=''))
-currents=cbind(current_static,current_dynamic[,-1]) #the two current runoff files are in the same order by SegmentNo and can therefore be joined with cbind
+currents=cbind(current_dynamic,current_static[,-1]) #the two current runoff files are in the same order by SegmentNo and can therefore be joined with cbind
 rm(list=c("current_dynamic","current_static"));gc()
 ### Get runoff data
 	load(paste(runoff.dir,es,"_",gcm,".Rdata",sep='')) #loads runoff data
@@ -77,4 +77,4 @@ rm(list=c("current_dynamic","current_static"));gc()
 	
 	
 	write.csv(Enviro_dat,paste(out.dir,es,"_",gcm,"_",yy,".csv",sep=''),row.names=F)	
-}
+# }
