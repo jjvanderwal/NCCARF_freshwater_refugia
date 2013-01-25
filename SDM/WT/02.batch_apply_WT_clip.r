@@ -1,4 +1,4 @@
-wd='/home/jc148322/NARPfreshwater/SDM/models/';
+wd='/home/jc148322/NARPfreshwater/SDM//Fish/models/';
 
 
 ###1. Load species occurrence data
@@ -33,5 +33,5 @@ for (spp in species) {
 	close(zz) 
 
 	##submit the script
-	system(paste('qsub -l nodes=1:ppn=1 02.',spp,'.clip_realized.sh',sep=''))
+	system(paste('qsub -a 1800 -l nodes=1:ppn=1 02.',spp,'.clip_realized.sh',sep=''))
 }

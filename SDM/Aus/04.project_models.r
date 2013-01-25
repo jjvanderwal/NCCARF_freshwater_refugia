@@ -8,10 +8,11 @@ maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar"
 proj.list=list.files(proj.dir,pattern='RCP')
 
 #subset proj.list, if required
-# proj.list=proj.list[-grep('RCP85',proj.list)]
-proj.list=c('current.csv',proj.list)
+proj.list=proj.list[grep('RCP85',proj.list)]
+
+#proj.list=c('current.csv',proj.list)
 species = list.files(wd) #get a list of species
-species=species[c(140,149)]
+
 #cycle through each of the species
 for (spp in species) { cat(spp,'\n')
 	spp.dir = paste(wd,spp,'/',sep=''); setwd(spp.dir) #set the working directory to the species directory
@@ -32,7 +33,7 @@ for (spp in species) { cat(spp,'\n')
 	close(zz)
 
 	#submit the script
-	system(paste('qsub -m n 04.',spp,'.project.models.sh',sep=''))
+	system(paste('qsub 04.',spp,'.project.models.sh',sep=''))
 	}
 	
 }

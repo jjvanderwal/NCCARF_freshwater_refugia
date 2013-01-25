@@ -1,8 +1,8 @@
-wd='/home/jc148322/NARPfreshwater/SDM/models/';
+wd='/home/jc148322/NARPfreshwater/SDM/Fish/models/';
 
 
 ###1. Determine which species are WT species - Load species occurrence data
-occur.file="/home/jc246980/Zonation/Fish_reach_aggregated.Rdata" #give the full file path of your species data
+occur.file="/home/jc246980/Species_data/Reach_data/Fish_reach_master.Rdata" #give the full file path of your species data
 occur=load(occur.file)
 occur=get(occur) #rename species occurrence data to 'occur'
 
@@ -24,18 +24,18 @@ species=intersect(species,list.files(wd)) #only get species that have been model
 out.dir='/home/jc148322/NARPfreshwater/SDM/Zonation/'
 
 
-asciis=list.files('/home/jc148322/NARPfreshwater/SDM/models/Acanthopagrus_berda/output/asciis/WT_realized')
-asciis=asciis[-1]
+asciis=list.files('/home/jc148322/NARPfreshwater/SDM/Fish/models/Acanthopagrus_berda/output/asciis/WT_realized')
+asciis=asciis[-grep('current',asciis)]
 gcms=unique(sapply(strsplit(asciis,'_'),'[',2))
 years=unique(sapply(strsplit(asciis,'_'),'[',3)); years=gsub('.asc.gz','',years)
-gcms=c('median','diff')
+#gcms=c('median','diff')
+gcms=gcms[-c(grep('ninetieth',gcms),grep('tenth',gcms))]
 
-
-for (gcm in gcms){
+for (gcm in gcms){ cat(gcm,'\n')
 
 	dir.create(paste(out.dir,gcm,'/',sep=''),recursive=TRUE)
 
-	for (spp in species[2:length(species)]) {
+	for (spp in species) { cat(spp,'...')
 		spp.dir=paste(wd, spp,'/output/asciis/',sep=''); setwd(spp.dir)
 		 for (yr in years){
 			system(paste('cp ',spp.dir,'WT_realized/RCP85_',gcm,'_',yr,'.asc.gz ',out.dir,gcm,'/',sep=''))

@@ -61,9 +61,9 @@ for (spp in species) { cat(spp,'\n')
 		cat('cd ',spp.dir,'\n',sep='',file=zz)
 		cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
 		cat('module load java\n',file=zz)
-		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
-		cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
-		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings  responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -P -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
+		# cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
+		# cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
+		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
 	close(zz)
 	setwd(spp.dir); system(paste('qsub -m n 01.',spp,'.model.sh',sep='')); setwd(wd) #submit the script
 	}

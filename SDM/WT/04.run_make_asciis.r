@@ -4,8 +4,8 @@ for(i in 1:length(args)) { eval(parse(text=args[[i]])) } #evaluate the arguments
 library(SDMTools) #load libraries and functions
 source('/home/jc148322/scripts/libraries/cool_functions.r')
 
-wd=paste('/home/jc148322/NARPfreshwater/SDM/models/',spp,'/output/WT_realized/',sep=''); setwd(wd) #set working directory
-out.dir=paste('/home/jc148322/NARPfreshwater/SDM/models/',spp,'/output/asciis/WT_realized/',sep='')
+wd=paste('/home/jc148322/NARPfreshwater/SDM/Fish/models/',spp,'/output/WT_realized/',sep=''); setwd(wd) #set working directory
+out.dir=paste('/home/jc148322/NARPfreshwater/SDM/Fish/models/',spp,'/output/asciis/WT_realized/',sep='')
 dir.create(out.dir,recursive=TRUE)
 
 ### Prepare data for making asciis

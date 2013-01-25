@@ -1,8 +1,8 @@
-wd='/home/jc148322/NARPfreshwater/SDM/models/';
+wd='/home/jc148322/NARPfreshwater/SDM/Fish/models/';
 
 
 ###1. Load species occurrence data
-occur.file="/home/jc246980/Zonation/Fish_reach_aggregated.Rdata" #give the full file path of your species data
+occur.file="/home/jc246980/Species_data/Reach_data/Fish_reach_master.Rdata" #give the full file path of your species data
 occur=load(occur.file)
 occur=get(occur) #rename species occurrence data to 'occur'
 
@@ -33,5 +33,5 @@ for (spp in species) {
 	close(zz) 
 
 	##submit the script
-	system(paste('qsub -l nodes=1:ppn=1 03.',spp,'.median.sh',sep=''))
+	system(paste('qsub -a 2100 -l nodes=1:ppn=1 03.',spp,'.median.sh',sep=''))
 }
