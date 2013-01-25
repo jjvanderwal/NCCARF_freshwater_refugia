@@ -1,75 +1,52 @@
 ###written by Lauren Hodgson, modified from Jeremy VanDerWal's SDM scripts. Jan 2013
 ########################################################################################################
 ### Define inputs, working directories and necessary libraries
-library(SDMTools) #define the libraries needed
-
-occur.file="/home/jc246980/Species_data/Reach_data/Fish_reach_master.Rdata" #give the full file path of your species data
-env.file="/home/jc148322/NARPfreshwater/SDM/Env_layers/current.Rdata"
+basedir='/home/jc165798/working/NARP_FW_SDM/'
+occur.file=paste(basedir,"raw_data/Fish_reach_master.Rdata",sep='') #give the full file path of your species data
+env.file=paste(basedir,"current_enviro_data.Rdata",sep='')
 maxent.jar = "/home/jc165798/working/NARP_birds/maxent.jar" #define the location of the maxent.jar file
-
-wd="/home/jc148322/NARPfreshwater/SDM/Fish/";dir.create(wd);setwd(wd)
+wd=paste(basedir,"models_fish/",sep='');setwd(wd) #define and set the working directory
+projdir = paste(basedir,'proj_data/',sep='') #define the projection directory
+projs = list.files(projdir) #get a list of the projections
 ########################################################################################################
 
-###1. Read in current environmental layers
+load(env.file) #read in evirodata
+for (tt in paste('bioclim_',sprintf('%02i',c(1,4:11)),sep="")) { cat(tt,'\n') #round temperature where appropriate
+	cois = grep(tt,colnames(current)); current[,cois] = round(current[,cois],1) 
+}
+for (tt in paste('bioclim_',sprintf('%02i',c(12:14,16:19)),sep="")) { cat(tt,'\n')#round precip where appropriate
+	cois = grep(tt,colnames(current)); current[,cois] = round(current[,cois]) 
+}
+write.csv(current,paste(projdir,'current_1990.csv',sep=''),row.names=FALSE) #write out the full current dataset
+current = current[,c('SegmentNo','lat','lon',paste('bioclim_',sprintf('%02i',c(1,4,5,6,12,15,16,17)),sep=''),'max.clust.length','clust.severity','Flow_accum_annual')] #keep only variables of interest
+load(occur.file); occur = tdata; rm(tdata) #load in the occur
+species=colnames(occur)[-1] #get a list of the species
 
-load(env.file) #load the current environmental layers file. The object is named 'current'
-env.vars=c(paste('bioclim_',sprintf('%02i',c(1,4,5,6,12,15,16,17)),sep=''),'max.clust.length','clust.severity','MeanAnnual')
-###2. Load species occurrence data
-occur=load(occur.file)
-occur=get(occur) #rename species occurrence data to 'occur'
-species=colnames(occur); species=species[-grep('SegmentNo',species)] #get species names, to loop through later
+tt = unique(round(c(which(rowSums(occur[,-1])>=1),runif(20000,1,nrow(current))))) #get segment numbers where a species has been observed and append some 15k random
+bkgd = current[tt,]; write.csv(bkgd,'../bkgd.csv',row.names=FALSE) #write out the background points
 
-
-###3. Tidy occur file - remove any SegmentNos that have no presence records, and append env layers to the end
-
-occur$count=rowSums(occur[,2:ncol(occur)]) #count all presence records for each SegmentNo
-occur=occur[which(occur$count>0),] #remove SegmentNos (rows) with no occurrence records for any species
-occur=occur[,-grep('count',colnames(occur))];  #remove the 'count' column
-
-
-###4. Merge occur file with environmental layers file - to do this, rename 'SegmentNo' to 'lat' and merge by it
-
-colnames(occur)[1]='lat' #rename 'SegmentNo' to 'lat'
-occur=merge(occur,current, by='lat') #merge occur and env layers by fake 'lat'
-
-
-###5. Prepare the background file.  This will be all SegmentNos with a presence record in the taxa.
-
-bkgd=cbind('bkgd',occur[,env.vars]) #bind 'background' species onto lats and longs and env.vars for all SegmentNos with a presence record.  '
-colnames(bkgd)[1]='spp' #rename the 'background' species column as 'species'
-write.csv(bkgd,'bkgd.csv',row.names=FALSE) #write out your target group background
-
-
-###6. Cycle through each species and submit jobs to be modelled
-
-for (spp in species) { cat(spp,'\n')
-	if(nrow(occur[which(occur[,spp]>0),])>0) { #check that there are presence records for the species
-	toccur = cbind(spp,occur[which(occur[,spp]>0),c('lat','long',env.vars)]) #get the observations for the species - get only the rows with occurrences (>0), and the environmental variables
-
-	if (nrow(toccur)<10) { #if there are fewer records than 10, do not model the species
-	} else { #else model the species
-	spp.dir = paste(wd,'models/',spp,'/',sep='') #define the species directory
-	dir.create(paste(spp.dir,'output',sep=''),recursive=TRUE) #create the species directory
-	
-	write.csv(toccur,paste(spp.dir,'occur_SegNo.csv',sep=''),row.names=FALSE) #write out the file
-	toccur=toccur[,c('spp',env.vars)]
-	write.csv(toccur,paste(spp.dir,'occur.csv',sep=''),row.names=FALSE) #write out modelling file
-	 
-	# create the shell script which will run the modelling jobs
-	zz = file(paste(spp.dir,'01.',spp,'.model.sh',sep=''),'w') #create the shell script to run the maxent model
-		cat('#!/bin/bash\n',file=zz)
-		cat('cd ',spp.dir,'\n',sep='',file=zz)
-		cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
-		cat('module load java\n',file=zz)
-		# cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 nooutputgrids -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
-		# cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
-		cat('java -mx2048m -jar ',maxent.jar,' -e ',wd,'bkgd.csv -s occur.csv -o output nothreshold outputgrids plots nowarnings responsecurves jackknife novisible nowriteclampgrid nowritemess writeplotdata -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
-	close(zz)
-	setwd(spp.dir); system(paste('qsub -m n 01.',spp,'.model.sh',sep='')); setwd(wd) #submit the script
-	}
+for (spp in species) {cat(spp,'\n')
+	if (length(which(occur[,spp]>0)) > 5) { #model species where count is greater than 5
+		toccur = current[which(current$SegmentNo %in% occur[which(occur[,spp]>0),'SegmentNo']),] #get segment number for the species
+		toccur$SegmentNo=spp #reset the values the species column of the occur file
+		spp.dir = paste(wd,spp,'/',sep='') #define the species directory
+		dir.create(paste(spp.dir,'output/potential/',sep=''),recursive=TRUE) #create the species directory and dir for all outputs
+		write.csv(toccur,paste(spp.dir,'occur.csv',sep=''),row.names=FALSE) #write out the file
+		
+		# create the shell script which will run the modelling jobs
+		zz = file(paste(spp.dir,'01.',spp,'.model.sh',sep=''),'w') #create the shell script to run the maxent model
+			cat('#!/bin/bash\n',file=zz)
+			cat('cd ',spp.dir,'\n',sep='',file=zz)
+			cat('source /etc/profile.d/modules.sh\n',file=zz) #this line is necessary for 'module load' to work in tsch
+			cat('module load java\n',file=zz)
+			cat('java -mx2048m -jar ',maxent.jar,' -e ',basedir,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible replicates=10 -r -a \n',sep="",file=zz) #run maxent bootstrapped to get robust model statistics
+			cat('cp -af output/maxentResults.csv output/maxentResults.crossvalide.csv\n',file=zz) #copy the maxent results file so that it is not overwritten
+			cat('java -mx2048m -jar ',maxent.jar,' -e ',basedir,'bkgd.csv -s occur.csv -o output nothreshold nowarnings novisible nowriteclampgrid nowritemess writeplotdata -P -J -r -a \n',sep="",file=zz) #run a full model to get the best parameterized model for projecting
+			for (tproj in projs) cat('java -mx2048m -cp ',maxent.jar,' density.Project ',spp.dir,'output/',spp,'.lambdas ',projdir,tproj,' ',spp.dir,'output/potential/',tproj,' fadebyclamping nowriteclampgrid\n',sep="",file=zz) #do the projections
+		close(zz)
+		setwd(spp.dir); system(paste('qsub -m n 01.',spp,'.model.sh',sep='')); setwd(wd) #submit the script
 	}
 }
-
 
 
 
