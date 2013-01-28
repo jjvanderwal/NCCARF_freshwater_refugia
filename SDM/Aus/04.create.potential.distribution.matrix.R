@@ -3,7 +3,7 @@
 
 ################################################################################
 
-wd = '/data/jc165798/AWT.future.sdm/models/'; setwd(wd)
+wd = '/home/jc165798/working/NARP_FW_SDM/models_fish/'; setwd(wd)
 script.file = '/home/jc165798/SCRIPTS/git_code/NCCARF_freshwater_refugia/SDM/Aus/04.script2run.R'
 
 species = list.files() #get a list of all the species
@@ -19,6 +19,6 @@ for (spp in species) {
 	close(zz)
 			
 	#submit the job
-	system(paste('qsub -m n -N ',spp,' -l nodes=1:ppn=2 02.create.pot.mat.sh',sep=''))
+	system(paste('qsub -m n -N ',spp,' -l nodes=1:ppn=3 02.create.pot.mat.sh',sep=''))
 }
 	
