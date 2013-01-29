@@ -33,13 +33,13 @@ cols = colorRampPalette(c('tan',"#E0F3F8","#ABD9E9","#90c4de","#74ADD1","#5d91c3
 pnts=cbind(x=c(146,146.25,146.25,146),y=c(-16.5,-16.5,-16,-16))
 
 setwd('/home/jc148322/NARPfreshwater/Hydrology/images/')
-png('WT_flow.1.png',width=dim(tasc)[1]*2+50,height=dim(tasc)[2]+50)
-par(mfrow=c(1,2),mar=c(2,1,1,1))
+png('WT_flow.png',width=dim(tasc)[1]*2+50,height=dim(tasc)[2]+70)
+par(mfrow=c(1,2),mar=c(4,1,1,1))
 	image(tasc, ann=F,axes=F,zlim=zlim,col=cols)
-	mtext('VanDerWal et al 2013', side=1, cex=1.8)
+	mtext('VanDerWal et al 2013', side=1, line=2,cex=3)
 	image(jasc, ann=F,axes=F,zlim=zlim,col=cols)
-	mtext('Stein 2012', side=1,cex=1.8)
-	legend.gradient(pnts,col=cols, round(zlim), title='Flow',cex=2)
+	mtext('Stein 2012', side=1,line=2,cex=3)
+	legend.gradient(pnts,col=cols, round(zlim/1000), title='Flow (GL)',cex=3)
 dev.off()
 
 #colorRampPalette(c('tan', 'lightblue', 'slateblue', 'blue', 'blue4', 'black'))(101)

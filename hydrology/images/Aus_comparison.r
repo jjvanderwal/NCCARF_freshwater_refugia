@@ -30,7 +30,7 @@ zlim=c(min(c(pos$flow,pos$jflow),na.rm=T),max(c(pos$flow,pos$jflow),na.rm=T))
 # zlim=c(min(c(pos$flow,pos$jflow),na.rm=T),max(tasc,na.rm=T))
 cols = colorRampPalette(c('tan',"#E0F3F8","#ABD9E9","#90c4de","#74ADD1","#5d91c3","#4575B4","#4067ad","#3c58a6","#37489d","#313695","#191c90",'blue4','#0d0d7d','midnightblue','#131354','#0d0d39','#06071e'))(100)
 
-pnts=cbind(x=c(144,146,146,144),y=c(-12,-12,-16,-16))
+pnts=cbind(x=c(146.5,148,148,146.5),y=c(-12,-12,-16,-16))
 
 setwd('/home/jc148322/NARPfreshwater/Hydrology/images/')
 png('Aus_flow.png',width=dim(tasc)[1]*2+50,height=dim(tasc)[2]+50)
