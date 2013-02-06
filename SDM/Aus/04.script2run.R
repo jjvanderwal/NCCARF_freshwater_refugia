@@ -9,7 +9,7 @@ args=(commandArgs(TRUE)); for(i in 1:length(args)) { eval(parse(text=args[[i]]))
 
 ################################################################################
 # do the work
-wd = paste('/home/jc165798/working/NARP_FW_SDM/models_fish/',spp,'/',sep=''); setwd(wd) #define and set working directory
+wd = paste(wd,spp,'/',sep=''); setwd(wd) #define and set working directory
 outdir = paste(wd,'summary/',sep=''); dir.create(outdir) #create the output dir
 ESs = c('RCP3PD','RCP45','RCP6','RCP85') #define the RCPs
 projs = list.files(paste(wd,'output/potential/',sep=''))
