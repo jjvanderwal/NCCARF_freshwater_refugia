@@ -2,11 +2,12 @@
 #GNU General Public License .. feel free to use / distribute ... no warranties
 
 ################################################################################
-tax='fish'
+tax='frog'
 sh.dir=paste('/home/jc148322/scripts/NARP_freshwater/SDM/richness/',tax,'/',sep='');dir.create(sh.dir,recursive=TRUE); setwd(sh.dir)
-wd = paste('/home/jc165798/working/NARP_FW_SDM/models_',tax,'/',sep=''); #use this for fish for now.
-# wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',tax,'/',sep=''); 
-clip.column='province' #basins2, province
+# wd = paste('/home/jc165798/working/NARP_FW_SDM/models_',tax,'/',sep=''); #use this for fish for now.
+wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',tax,'/',sep=''); 
+# clip.column='province' #basins2, province
+clip.column='basins2'
 script.file = '/home/jc148322/scripts/NARP_freshwater/SDM/05.script2run.R'
 ESs=c('RCP3PD','RCP45','RCP6','RCP85')
 
@@ -28,6 +29,6 @@ for (es in ESs) {
 	close(zz)
 			
 	#submit the job
-	system(paste('qsub -m n -N ',es,' -l nodes=1:ppn=12 05.',es,'.richness.percentiles.sh',sep=''))
+	system(paste('qsub -m n -N ',tax,'_',es,' -l nodes=1:ppn=12 05.',es,'.richness.percentiles.sh',sep=''))
 }
 	

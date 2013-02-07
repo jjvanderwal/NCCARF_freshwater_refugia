@@ -60,7 +60,7 @@ for (spp in species) {cat (spp,'\n')
 
 
 #deal with future richness
-
+save(richness,file=paste(es,'_richness.Rdata',sep='')) #save out the data in case
 YEARs=seq(2015,2085,10)
 out.dir=paste('/home/jc148322/NARPfreshwater/SDM/richness/',tax,'/',sep=''); dir.create(out.dir); setwd(out.dir)
 outquant=NULL
