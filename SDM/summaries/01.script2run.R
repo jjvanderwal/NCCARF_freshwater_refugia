@@ -44,5 +44,5 @@ for (es in ESs) { cat(es,'\n') #cycle through each variable of interest
 ###03. merge the percentile richness deltas with pos for each taxa and save the data out
 out=merge(pos,out,by='SegmentNo',all.x=T)
 setwd(out.dir)
-save(out,paste(tax,'_delta.csv', sep=''),as.is=T)
+save(out,file=paste(tax,'_delta.Rdata', sep=''))
 
