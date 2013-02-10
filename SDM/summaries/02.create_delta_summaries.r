@@ -1,61 +1,23 @@
-library(SDMTools); library(maptools) #define the libraries needed
-
-##  define input and output directories
+#drafted by Jeremy VanDerWal ( jjvanderwal@gmail.com ... www.jjvanderwal.com )
+#GNU General Public License .. feel free to use / distribute ... no warranties
+##get the delta data in the same format as cassie's delta outputs in preparation for input into her stability summary script
+################################################################################
 data.dir='/home/jc148322/NARPfreshwater/SDM/richness/summaries/deltas/'
-rb.dir="/home/jc148322/NARPfreshwater/SDM/richness/summaries/River_basins/"; dir.create(rb.dir,recursive=T)
-ram.dir='/home/jc148322/NARPfreshwater/SDM/richness/summaries/Ramsars/'; dir.create(ram.dir, recursive=T)
+script.file = '/home/jc148322/scripts/NARP_freshwater/SDM/summaries/02.script2run.R'
+sh.dir='/home/jc148322/scripts/NARP_freshwater/SDM/summaries/summary_tables.sh/'; dir.create(sh.dir,recursive=T); setwd(sh.dir)
 
-## define variables, in this case, taxa
-ESs=c('RCP3PD','RCP45','RCP6','RCP85')
-YEARs=seq(2015, 2085, 10)
+taxa=list.files(data.dir)
 
-vois=list.files(data.dir)
+for (tax in taxa) {
+	tax.arg = paste('tax="',tax,'" ',sep='')
 
-for (voi in vois) { cat(voi,'\n') 
-
-	load(paste(data.dir,voi,sep='')) #object name: out
-	
-	## create some vectors of variables and empty matrices during first loop
-	if (voi==vois[1]) {
-		RiverBasins=sort(unique(na.omit(out$Riverbasin))) #create RiverBasins vector
-		RAMSARS=RiverBasins=sort(unique(na.omit(out$ramsar)))
-		
-		## create river basins and ramsar output matrices
-		rb_delta = matrix(NA,nrow=length(RiverBasins)*3,ncol=(3*length(ESs)*length(YEARs))); 
-		ramdelta = matrix(NA,nrow=length(RAMSARS)*3,ncol=(3*length(ESs)*length(YEARs)));
-		## colnames
-		tt = expand.grid(c(10,50,90),YEARs,ESs); tt = paste(tt[,3],tt[,2],tt[,1],sep='_'); colnames(rb_delta) = tt; colnames(ram_delta) = tt
-		## rownames
-		tt = expand.grid(c('quant_10', 'quant_50', 'quant_90'),RiverBasins); tt = paste(tt[,2],tt[,1],sep='_'); rownames(rb_delta)=tt
-		tt = expand.grid(c('quant_10', 'quant_50', 'quant_90'),RAMSARS); tt = paste(tt[,2],tt[,1],sep='_'); rownames(ram_delta)=tt
-	}
-		
-	##summarise by river basin
-	table_delta = rb_delta #create a copy of the empty matrix
-	for (rb in RiverBasins) { cat(rb,'\n') #cycle through each basin
+	zz = file(paste('02.',tax,'.delta.summary.sh',sep=''),'w') ##create the sh file
+		cat('#!/bin/sh\n',file=zz)
+		cat('cd $PBS_O_WORKDIR\n',file=zz)
+		cat("R CMD BATCH --no-save --no-load '--args ",tax.arg,"' ",script.file,' 02.',tax,'.delta.summary.Rout \n',sep='',file=zz)
+	close(zz)
 			
-			tout = out[which(out$Riverbasin==rb),] #get the data only for the rb of interest
-			cois=grep('RCP',colnames(tout))
-			outquant = apply(tout[,cois],2,function(x) { return(quantile(x,c(0.1,0.5,0.9),na.rm=TRUE,type=8)) })#get the percentiles					
-			rowname=paste(rb,"_quant_", c(10,50,90), sep='')
-			table_delta[rownames(table_delta)==rowname,]=outquant[,]
-
-	}
-		
-	write.csv(table_delta,paste(rb.dir,"rb_",gsub('.Rdata','.csv',voi),sep=''),row.names=T)	 
-
-	## summarise by ramsar
-	table_delta = ram_delta #create a copy of the empty matrix
-	for (ram in RAMSARS) { cat(ram,'\n') #cycle through each basin
-
-			tout = out[which(out$ramsar==ram),] #get the data only for the rb of interest
-			cois=grep('RCP',colnames(tout))
-			outquant = apply(tout[,cois],2,function(x) { return(quantile(x,c(0.1,0.5,0.9),na.rm=TRUE,type=8)) })#get the percentiles					
-			rowname=paste(rb,"_quant_", c(10,50,90), sep='')
-			table_delta[rownames(table_delta)==rowname,]=outquant[,]
-
-			}; 
-
-	write.csv(table_delta,paste(ram.dir,"ram_",gsub('.Rdata','.csv',voi),sep=''),row.names=T)	 
-
-}			
+	#submit the job
+	system(paste('qsub -m n -N ',gsub('_delta.Rdata','',tax),'_summary',' -l nodes=1:ppn=12 02.',tax,'.delta.summary.sh',sep=''))
+}
+	
