@@ -16,7 +16,7 @@ data.dir="/home/jc148322/NARPfreshwater/SDM/richness/summaries/deltas/"
 image.dir='/home/jc148322/NARPfreshwater/Ramsars/richness_delta_maps/'; dir.create(image.dir,recursive=T)
 
 ###Set up base files
-baseasc = read.asc.gz('base.asc.gz');
+base.asc = read.asc.gz('base.asc.gz');
 base5k = read.asc.gz('/home/jc165798/working/NARP_hydro/stability/OZ_5km/data/base.asc.gz') #define and set working directory
 
 ###Load RAMSAR data
@@ -48,7 +48,7 @@ ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Great Sandy Strait (including
 ### Load all delta richness data for each taxa
 setwd(data.dir)
 vois=list.files()
-yy="2085"
+yr="2085"
 es="RCP85"
 
  for (voi in vois) { 
@@ -56,7 +56,7 @@ es="RCP85"
 
 	load(voi) #object name: outdelta
 		
-	tdata = outdelta[,c(1:8,intersect(grep(yy,colnames(outdelta)),grep(es,colnames(outdelta))))]
+	tdata = outdelta[,c(1:8,intersect(grep(yr,colnames(outdelta)),grep(es,colnames(outdelta))))]
 	assign(tax,tdata)
 }
 pos=tdata[,c(1:8)]
@@ -72,12 +72,9 @@ for(ram in RAMSARS) {
 	
 	### Make the image
 	png(paste(Ramsar_name,'.png',sep=''),width=dim(base5k)[1]*4+30, height=dim(base5k)[1]*3+120, units='px', pointsize=20, bg='grey90')
-
 	par(mar=c(2,2,2,2),cex=1,oma=c(6,2,2,2))
-
 	  mat = matrix(c( 13,13,13,14,14,14,14,14,14,15,15,15,
 					  13,13,13,14,14,14,14,14,14,15,15,15,
-					  13,13,13,14,14,14,14,14,14,15,15,15,
 					  1,1,1,4,4,4,7,7,7,10,10,10,
 					  1,1,1,4,4,4,7,7,7,10,10,10,
 					  1,1,1,4,4,4,7,7,7,10,10,10,
@@ -86,10 +83,11 @@ for(ram in RAMSARS) {
 					  2,2,2,5,5,5,8,8,8,11,11,11,
 					  3,3,3,6,6,6,9,9,9,12,12,12,
 					  3,3,3,6,6,6,9,9,9,12,12,12,
-					  3,3,3,6,6,6,9,9,9,12,12,12),nr=12,nc=12,byrow=TRUE) #create a layout matrix for images
+					  3,3,3,6,6,6,9,9,9,12,12,12),nr=11,nc=12,byrow=TRUE) #create a layout matrix for images
 
 	layout(mat) #call layout as defined above
 	counter=0
+	taxnames=c('Crayfish','Fish','Frogs','Turtles')
 	for (tax in taxa){ 
 		counter=counter+1
 		tdata=get(taxa[counter])
@@ -99,30 +97,33 @@ for(ram in RAMSARS) {
 
 		xlim=c(min.lon,max.lon);
 		ylim=c(min.lat,max.lat)
+		
+		captions=c('10th','50th','90th')
 
 		for (ii in 9:11) { cat(tax, '-', ii-8,'\n')
-			image(baseasc, ann=FALSE,axes=FALSE,col='white',  xlim=xlim,ylim=ylim) 
-			tasc = baseasc; tasc[cbind(pos$row,pos$col)] = tdata[,9]
+			image(base.asc, ann=FALSE,axes=FALSE,col='white',  xlim=xlim,ylim=ylim) 
+			tasc = base.asc; tasc[cbind(pos$row,pos$col)] = tdata[,ii]
 			image(tasc,ann=FALSE,axes=FALSE,zlim=deltalims,col=cols, add=TRUE) 
-			plot(rivers, lwd=2, ann=FALSE,axes=FALSE, add=TRUE, col='cornflowerblue')
-			plot(catchments, lwd=2, ann=FALSE,axes=FALSE, add=TRUE,border="darkgrey", lwd=1.5)	
-			plot(Ramsarshape, lwd=2, ann=FALSE,axes=FALSE, add=TRUE)			
-			mtext('10th', line=1,  side=2, cex=2.5)
-		}
-
+			plot(rivers, lwd=4, ann=FALSE,axes=FALSE, add=TRUE, col='cornflowerblue')
+			plot(catchments, lwd=4, ann=FALSE,axes=FALSE, add=TRUE,border="darkgrey", lwd=1.5)	
+			plot(Ramsarshape, lwd=4, ann=FALSE,axes=FALSE, add=TRUE)
+			assign.list(l,r,b,t) %=% par("usr") # make sure this follows a plot to get the extent correct!	
+			mtext(captions[ii-8], line=1,  side=2, cex=2.5)
+			if (ii==11) mtext (taxnames[counter], line=2, side=1, cex=2.5)
+		 }
 	}
-	assign.list(l,r,b,t) %=% par("usr") # make sure this follows a plot to get the extent correct!
-	image(baseasc,ann=FALSE,axes=FALSE,col='white', zlim=c(0,1))
+	image(base5k,ann=FALSE,axes=FALSE,col='white', zlim=c(0,1))
 	image(clip.image(l,r,b,t),ann=FALSE,axes=FALSE, col="black",add=TRUE)
 
 	plot(1:20,axes=FALSE,ann=FALSE,type='n')
-	text(10,15,Ramsar_name,cex=3) 
-	text(10,10,variable_name,cex=3) 
-	text(10,5,'RCP8.5 2085',cex=3) 
+	text(10,15,Ramsar_name,cex=4) 
+	text(10,10,"Proportion of current richness",cex=4) 
+	text(10,5,paste(es,yr,sep=' '),cex=4) 
 
 	plot(1:20,axes=FALSE,ann=FALSE,type='n')
-	text(10,14,"Difference from current",cex=3)
-	color.legend(4,2,16,8,deltalabs,cols,align="rb",gradient="x", cex=2)
+	text(10,15,"Difference from current",cex=3)
+	color.legend(2,5,18,8,deltalabs,cols,align="rb",gradient="x", cex=2)
+	legend(2,14, fill='white','No richness, current or future',bty='n', cex=2.8)
 
 	dev.off()
 }
