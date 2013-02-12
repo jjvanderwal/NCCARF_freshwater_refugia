@@ -34,7 +34,7 @@ deltalabs = c(paste('<',deltalims[1]),1,paste('>',deltalims[2]))
 ### set up data frame to create names and zoom extent for each ramsar
 ram= c(13,27,26,32,31,33,9,15,17,14,12,6,1,3,2,5,24,4,29,22,28,36,37,7,8,10,11, 16, 23, 25, 30)
 refcode=c(64,56,55,39,38,36,24,52,28,65,53,50,43,41,51,44,34,42,33,32,31,2,1,48,62, 49, 47, 23, 54, 35, 37)
-zoom=c(20,100,100,100,100,50,150,15,15,15,100,20,50,20,20,20,20,20,50,30,30,30,30,80, 30, 80, 80, 100, 30, 50, 30)
+
 ref_table=cbind(as.data.frame(ram), as.data.frame(refcode),as.data.frame(zoom))
 ref_table=merge(ref_table,RAMinfo[, c("REFCODE","RAMSAR_NAM")], by.x='refcode', by.y='REFCODE')
 ref_table$RAMSAR_NAM=as.character(ref_table$RAMSAR_NAM)
@@ -45,6 +45,9 @@ ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Shoalwater and Corio Bays Are
 ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Gwydir Wetlands: Gingham and Lower Gwydir (Big Leather) Watercourses")] <- "Gwydir Wetlands"
 ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Great Sandy Strait (including Great Sandy Strait, Tin Can Bay and Tin Can Inlet).")] <- "Great Sandy Strait"
 
+ref_table=unique(ref_table)
+ref_table=ref_table[order(ref_table$RAMSAR_NAM),]
+ref_table$zoom=c(200, 400, 20, 30,50,20,100,100,20,100,150,30,100,100,100,30,400,20,100,20,20,100,30,20,50,50,30,100,400,400,100)
 ### Load all delta richness data for each taxa
 setwd(data.dir)
 vois=list.files()
