@@ -91,13 +91,15 @@ for (ram in RAMSARS) {
 		for (rcp in RCPs) {
 			graph_data = out[(out$RAMSARS==ram) & (out$ESs==rcp),]	
 			
+			if(data_type=='absolute') lim=2
+			if (data_type=='delta') lim=0.5
 			plot(graph_data[,3],graph_data[,5],xlab='', ylab=ylab, font.sub=2, font.lab=1, xlim=c(2015,2085),ylim=ylim, type='n', cex.lab=2.5, cex.axis=1, axes=F,xaxs='i',yaxs='i', col.axis='grey20')
 			rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = "grey90")
-			abline(h=c(seq(ylim[1],ylim[2],0.25)),v=YEARs, col="white")
+			abline(h=c(seq(ylim[1],ylim[2],lim/2)),v=YEARs, col="white")
 			polygon(c(graph_data[,3], rev(graph_data[,3])), c(graph_data[,4], rev(graph_data[,6])), col=adjustcolor('orange',alpha.f=0.5),lty=0) 	
 			lines(graph_data[,3],graph_data[,5], col='grey20')  	
 			axis(1,YEARs[2:7],labels=YEARs[2:7],lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	
-			axis(2,seq(ylim[1],ylim[2],0.5),labels=round(seq(ylim[1],ylim[2],0.5),1),lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	 	
+			axis(2,seq(ylim[1],ylim[2],lim),labels=round(seq(ylim[1],ylim[2],lim),1),lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	 	
 			if(ii==1 & rcp==RCPs[1]) legend(2016,(((ylim[2]-(ylim[1]))/5)*0.7)+(ylim[1]), 'Best estimate (50th percentile)',lwd=1, bty='n',xjust=0, cex=2.5) 	
 			if(ii==1 & rcp==RCPs[1])legend(2018,(((ylim[2]-(ylim[1]))/5)*1)+(ylim[1]), 'Variation between GCMs (10th-90th)', fill=adjustcolor('orange',alpha.f=0.5),border=adjustcolor('orange',alpha.f=0.5),bty='n', cex=2.5) 	
 			if(ii==4 & rcp==RCPs[1]) mtext('Low (RCP4.5)', line=4,  side=1, cex=2,font=2)  
