@@ -33,8 +33,15 @@ ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Gwydir Wetlands: Gingham and 
 ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Great Sandy Strait (including Great Sandy Strait, Tin Can Bay and Tin Can Inlet).")] <- "Great Sandy Strait"
 
 taxa=list.files(data.dir, pattern='ram')
+taxa=taxa[c(2,1,4,3)]
 setwd(data.dir)
-for (tax in taxa) {
+
+### get the data in the correct format to be graphed
+taxnames=c('Fish','Crayfish','Turtle','Frog')
+counter=0
+for (tax in taxa){
+	counter=counter+1
+	
 	load(tax)
 
 	if(data_type=='absolute') tdata=table_abs
@@ -55,40 +62,50 @@ for (tax in taxa) {
 	out=out[,c(1,3,2,4,5,6)]
 	out=out[order(out$RAMSARS,out$ESs),]
 	out[,c(4:6)]=round(out[c(4:6)],1)
+	assign(taxnames[counter],out)
+}
 
-	tax=strsplit(tax,'_')[[1]][2]
-	for (ram in RAMSARS) {		
-		
-		Ramsar_name=ref_table[which(ref_table$ram==ram), 'RAMSAR_NAM'] [1]
-		
+### make a graph of all taxa for each ramsar
+
+for (ram in RAMSARS) {		
+	
+	Ramsar_name=ref_table[which(ref_table$ram==ram), 'RAMSAR_NAM'] [1]
+	
+	png(paste(image.dir,Ramsar_name,'_trends.png',sep=''),width=dim(baseasc)[1]*2+30, height=dim(baseasc)*3[1], units='px', pointsize=20, bg='white') 
+	par(mfrow=c(4,2),mar=c(5,5,2,1), oma=c(2,0,1,0)) 	
+	
+	for (ii in 1:4) {
+		out=get(taxnames[ii])
 		graph_data = out[(out$RAMSARS==ram) & (out$ESs=="RCP85") |(out$RAMSARS==ram) &(out$ESs=="RCP45") ,]	
 		ylim=c(round(min(graph_data[,4:6])-0.5),round(max(graph_data[,4:6])+0.6))
+	
+		# if (data_type=='absolute' & ylim[1]==0 & ylim[2]==1 | data_type=='delta' & is.na(ylim[1]) & is.na(ylim[2])) { #do not make an image
+		# } else {
+		if (data_type=='delta') ylim=c(0,2)
 		
-		if (data_type=='absolute' & ylim[1]==0 & ylim[2]==1 | data_type=='delta' & is.na(ylim[1]) & is.na(ylim[2])) { #do not make an image
-		} else {
-		png(paste(image.dir,Ramsar_name,'_',tax,'_trends.png',sep=''),width=dim(baseasc)[1]*2+30, height=dim(baseasc)[1], units='px', pointsize=20, bg='white') 
-		par(mfrow=c(1,2),mar=c(5,5,2,1), oma=c(2,0,1,0)) 	
-		if (data_type=='absolute') ylab='Richness (# of species)'
-		if (data_type=='delta') ylab='Richness (prop. of current)'
-		
+		if (data_type=='absolute') ylab=paste(taxnames[ii],' richness (# of species)',sep='')
+		if (data_type=='delta') ylab=paste(taxnames[ii],' richness (prop. of current)',sep='')
+	
+
 		RCPs=c('RCP45','RCP85')
 		for (rcp in RCPs) {
-			graph_data = out[(out$RAMSARS==ram) & (out$ESs=="RCP45"),]	
+			graph_data = out[(out$RAMSARS==ram) & (out$ESs==rcp),]	
 			
-			plot(graph_data[,3],graph_data[,5],xlab='', ylab=ylab, font.sub=2, font.lab=1, xlim=c(2015,2085),ylim=ylim, type='n', cex.lab=1.8, cex.axis=1, axes=F,xaxs='i',yaxs='i', col.axis='grey20')
+			plot(graph_data[,3],graph_data[,5],xlab='', ylab=ylab, font.sub=2, font.lab=1, xlim=c(2015,2085),ylim=ylim, type='n', cex.lab=2.5, cex.axis=1, axes=F,xaxs='i',yaxs='i', col.axis='grey20')
 			rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = "grey90")
-			abline(h=c(seq(ylim[1],ylim[2],1)),v=YEARs, col="white")
+			abline(h=c(seq(ylim[1],ylim[2],0.25)),v=YEARs, col="white")
 			polygon(c(graph_data[,3], rev(graph_data[,3])), c(graph_data[,4], rev(graph_data[,6])), col=adjustcolor('orange',alpha.f=0.5),lty=0) 	
 			lines(graph_data[,3],graph_data[,5], col='grey20')  	
-			axis(1,YEARs[2:7],labels=YEARs[2:7],lwd=0.5,lwd.ticks=0.5,cex.axis=1.6,col='grey20') 	
-			axis(2,seq(ylim[1],ylim[2],1),labels=round(seq(ylim[1],ylim[2],1)),lwd=0.5,lwd.ticks=0.5,cex.axis=1.6,col='grey20') 	 	
-			legend(2016,(((ylim[2]-(ylim[1]))/5)*0.5)+(ylim[1]), 'Best estimate (50th percentile)',lwd=1, bty='n',xjust=0, cex=1.25) 	
-			legend(2018,(((ylim[2]-(ylim[1]))/5)*0.85)+(ylim[1]), 'Variation between GCMs (10th-90th)', fill=adjustcolor('orange',alpha.f=0.5),border=adjustcolor('orange',alpha.f=0.5),bty='n', cex=1.25) 	
-			mtext('Low (RCP45)', line=3,  side=1, cex=2,font=2)  	
+			axis(1,YEARs[2:7],labels=YEARs[2:7],lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	
+			axis(2,seq(ylim[1],ylim[2],0.5),labels=round(seq(ylim[1],ylim[2],0.5),1),lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	 	
+			if(ii==1 & rcp==RCPs[1]) legend(2016,(((ylim[2]-(ylim[1]))/5)*0.7)+(ylim[1]), 'Best estimate (50th percentile)',lwd=1, bty='n',xjust=0, cex=2.5) 	
+			if(ii==1 & rcp==RCPs[1])legend(2018,(((ylim[2]-(ylim[1]))/5)*1)+(ylim[1]), 'Variation between GCMs (10th-90th)', fill=adjustcolor('orange',alpha.f=0.5),border=adjustcolor('orange',alpha.f=0.5),bty='n', cex=2.5) 	
+			if(ii==4 & rcp==RCPs[1]) mtext('Low (RCP4.5)', line=4,  side=1, cex=2,font=2)  
+			if(ii==4 & rcp==RCPs[2]) mtext('High (RCP8.5)', line=4,  side=1, cex=2,font=2) 
 		}
-		
-		dev.off() 
-		}
+
+	# }
 	}
+	dev.off() 
 }
 
