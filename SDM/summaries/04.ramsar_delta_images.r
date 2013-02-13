@@ -35,7 +35,7 @@ deltalabs = c(paste('<',deltalims[1]),1,paste('>',deltalims[2]))
 ram= c(13,27,26,32,31,33,9,15,17,14,12,6,1,3,2,5,24,4,29,22,28,36,37,7,8,10,11, 16, 23, 25, 30)
 refcode=c(64,56,55,39,38,36,24,52,28,65,53,50,43,41,51,44,34,42,33,32,31,2,1,48,62, 49, 47, 23, 54, 35, 37)
 
-ref_table=cbind(as.data.frame(ram), as.data.frame(refcode),as.data.frame(zoom))
+ref_table=cbind(as.data.frame(ram), as.data.frame(refcode))
 ref_table=merge(ref_table,RAMinfo[, c("REFCODE","RAMSAR_NAM")], by.x='refcode', by.y='REFCODE')
 ref_table$RAMSAR_NAM=as.character(ref_table$RAMSAR_NAM)
 
@@ -111,22 +111,22 @@ for(ram in RAMSARS) {
 			plot(catchments, lwd=4, ann=FALSE,axes=FALSE, add=TRUE,border="darkgrey", lwd=1.5)	
 			plot(Ramsarshape, lwd=4, ann=FALSE,axes=FALSE, add=TRUE)
 			assign.list(l,r,b,t) %=% par("usr") # make sure this follows a plot to get the extent correct!	
-			mtext(captions[ii-8], line=1,  side=2, cex=2.5)
-			if (ii==11) mtext (taxnames[counter], line=2, side=1, cex=2.5)
+			mtext(captions[ii-8], line=1,  side=2, cex=3.5)
+			if (ii==11) mtext (taxnames[counter], line=2, side=1, cex=3.5)
 		 }
 	}
 	image(base5k,ann=FALSE,axes=FALSE,col='white', zlim=c(0,1))
 	image(clip.image(l,r,b,t),ann=FALSE,axes=FALSE, col="black",add=TRUE)
 
 	plot(1:20,axes=FALSE,ann=FALSE,type='n')
-	text(10,15,Ramsar_name,cex=4) 
-	text(10,10,"Proportion of current richness",cex=4) 
-	text(10,5,paste(es,yr,sep=' '),cex=4) 
+	text(10,15,Ramsar_name,cex=5) 
+	text(10,10,"Proportion of current richness",cex=5) 
+	text(10,5,paste(es,yr,sep=' '),cex=5) 
 
 	plot(1:20,axes=FALSE,ann=FALSE,type='n')
-	text(10,15,"Difference from current",cex=3)
-	color.legend(2,5,18,8,deltalabs,cols,align="rb",gradient="x", cex=2)
-	legend(2,14, fill='white','No richness, current or future',bty='n', cex=2.8)
+	text(10,15,"Difference from current",cex=4)
+	color.legend(2,5,18,8,deltalabs,cols,align="rb",gradient="x", cex=2.5)
+	legend(2,14, fill='white','No richness, current or future',bty='n', cex=3)
 
 	dev.off()
 }
