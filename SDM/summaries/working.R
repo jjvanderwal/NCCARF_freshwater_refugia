@@ -15,7 +15,7 @@ setwd(data.dir)
 files=list.files(pattern='.Rdata')
 files=files[c(2,1,4,3)]
 taxa=c('Fish','Crayfish','Turtles','Frogs')
-cols = c("#A50026","#FFFFBF","#E0F3F8","#ABD9E9")
+cols = c("#A50026","#FFFFBF","#ABD9E9","#4575B4")
 
 png(paste(image.dir,'agreement.png',sep=''),width=dim(base.asc)[1]+30, height=dim(base.asc)[2]*2+40, units='px', pointsize=20, bg='grey')
 mat=matrix(c(5,5,
