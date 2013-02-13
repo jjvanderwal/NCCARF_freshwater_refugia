@@ -22,7 +22,7 @@ image.dir=paste('/home/jc148322/NARPfreshwater/Ramsars/richness_trends/',data_ty
 RAMinfo = read.dbf('/home/jc246980/RAMSAR/RAMSAR_info.dbf')
 ram= c(13,27,26,32,31,33,9,15,17,14,12,6,1,3,2,5,24,4,29,22,28,36,37,7,8,10,11, 16, 23, 25, 30)
 refcode=c(64,56,55,39,38,36,24,52,28,65,53,50,43,41,51,44,34,42,33,32,31,2,1,48,62, 49, 47, 23, 54, 35, 37)
-ref_table=cbind(as.data.frame(ram), as.data.frame(refcode),as.data.frame(zoom))
+ref_table=cbind(as.data.frame(ram), as.data.frame(refcode))
 ref_table=merge(ref_table,RAMinfo[, c("REFCODE","RAMSAR_NAM")], by.x='refcode', by.y='REFCODE')
 ref_table$RAMSAR_NAM=as.character(ref_table$RAMSAR_NAM)
 
@@ -32,7 +32,7 @@ ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Shoalwater and Corio Bays Are
 ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Gwydir Wetlands: Gingham and Lower Gwydir (Big Leather) Watercourses")] <- "Gwydir Wetlands"
 ref_table$RAMSAR_NAM[ which(ref_table$RAMSAR_NAM=="Great Sandy Strait (including Great Sandy Strait, Tin Can Bay and Tin Can Inlet).")] <- "Great Sandy Strait"
 
-taxa=list.files(data.dir)
+taxa=list.files(data.dir, pattern='ram')
 setwd(data.dir)
 for (tax in taxa) {
 	load(tax)
@@ -64,7 +64,7 @@ for (tax in taxa) {
 		graph_data = out[(out$RAMSARS==ram) & (out$ESs=="RCP85") |(out$RAMSARS==ram) &(out$ESs=="RCP45") ,]	
 		ylim=c(round(min(graph_data[,4:6])-0.5),round(max(graph_data[,4:6])+0.6))
 		
-		if(ylim[1]==0 & ylim[2]==1 | is.na(ylim[1]) | is.na(ylim[2])) { #do not make an image
+		if (data_type=='absolute' & ylim[1]==0 & ylim[2]==1 | data_type=='delta' & is.na(ylim[1]) & is.na(ylim[2])) { #do not make an image
 		} else {
 		png(paste(image.dir,Ramsar_name,'_',tax,'_trends.png',sep=''),width=dim(baseasc)[1]*2+30, height=dim(baseasc)[1], units='px', pointsize=20, bg='white') 
 		par(mfrow=c(1,2),mar=c(5,5,2,1), oma=c(2,0,1,0)) 	

@@ -38,7 +38,7 @@ for(r in regiontypes) {
 		for (voi in vois) { cat(voi,'\n')
 			##create a summary table 
 			if (voi==vois[1]) tout = out[which(out[,r]==region),] #get only region data
-			if (voi==vois[2]) tout = outdelta[which(out[,r]==region),] #get only region data
+			if (voi==vois[2]) tout = outdelta[which(outdelta[,r]==region),] #get only region data
 			
 			cois=grep('RCP',colnames(tout))
 			outquant = apply(tout[,cois],2,function(x) { return(quantile(x,c(0.1,0.5,0.9),na.rm=TRUE,type=8)) })#get the percentiles					
