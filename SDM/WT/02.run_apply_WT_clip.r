@@ -1,12 +1,12 @@
 args=(commandArgs(TRUE)) #get the command line arguements
 for(i in 1:length(args)) { eval(parse(text=args[[i]])) } #evaluate the arguments
 
-wd='/home/jc148322/NARPfreshwater/SDM/Fish/models/';
+wd='/home/jc165798/working/NARP_FW_SDM/models_fish/';
 spp.dir=paste(wd,spp,'/output/',sep='');setwd(spp.dir)
 clip=read.csv('/home/jc148322/NARPfreshwater/SDM/WT_clip.csv',as.is=TRUE)
 out.dir=paste(spp.dir,'WT_realized',sep=''); dir.create(out.dir)
 files=list.files(paste(spp.dir,'potential/',sep=''))
-files=c('current.csv',files[grep('RCP85',files)])
+files=c('current_1990.csv',files[grep('RCP85',files)])
 #files=files[intersect(grep('RCP85',files),grep('2025',files))]
 
 for (tfile in files) { cat(tfile,'\n')

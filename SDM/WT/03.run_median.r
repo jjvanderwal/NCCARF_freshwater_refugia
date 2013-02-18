@@ -2,7 +2,7 @@ args=(commandArgs(TRUE)) #get the command line arguements
 for(i in 1:length(args)) { eval(parse(text=args[[i]])) } #evaluate the arguments
 
 
-spp.dir=paste('/home/jc148322/NARPfreshwater/SDM/Fish/models/',spp,'/output/WT_realized/',sep=''); setwd(spp.dir)
+spp.dir=paste('/home/jc165798/working/NARP_FW_SDM/models_fish/',spp,'/output/WT_realized/',sep=''); setwd(spp.dir)
 years=seq(2015,2085,10)
 
 for (yr in years) {
