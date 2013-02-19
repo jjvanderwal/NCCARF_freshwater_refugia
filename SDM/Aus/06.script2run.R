@@ -21,7 +21,7 @@ zlim=c(0,2)
 base.asc = read.asc.gz(paste('/home/jc148322/NARPfreshwater/SDM/SegmentNo_1km.asc.gz',sep='')) #read in the base asc file
 pos=make.pos(base.asc)
 pos$SegmentNo=extract.data(cbind(pos$lon,pos$lat),base.asc)
-pos=merge(pos,outdelta, by='SegmentNo',all.x=TRUE)
+outdelta=merge(pos,outdelta, by='SegmentNo',all.x=TRUE)
 
 Drainageshape = readShapePoly('/home/jc246980/Janet_Stein_data/Drainage_division') #read in your shapefile
 

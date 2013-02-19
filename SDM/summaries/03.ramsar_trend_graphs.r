@@ -91,11 +91,11 @@ for (ram in RAMSARS) {
 		for (rcp in RCPs) {
 			graph_data = out[(out$RAMSARS==ram) & (out$ESs==rcp),]	
 			
-			if(data_type=='absolute') lim=2
+			if(data_type=='absolute') lim=1
 			if (data_type=='delta') lim=0.5
 			plot(graph_data[,3],graph_data[,5],xlab='', ylab=ylab, font.sub=2, font.lab=1, xlim=c(2015,2085),ylim=ylim, type='n', cex.lab=2.5, cex.axis=1, axes=F,xaxs='i',yaxs='i', col.axis='grey20')
 			rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = "grey90")
-			abline(h=c(seq(ylim[1],ylim[2],lim/2)),v=YEARs, col="white")
+			abline(h=c(seq(ylim[1],ylim[2],lim)),v=YEARs, col="white")
 			polygon(c(graph_data[,3], rev(graph_data[,3])), c(graph_data[,4], rev(graph_data[,6])), col=adjustcolor('orange',alpha.f=0.5),lty=0) 	
 			lines(graph_data[,3],graph_data[,5], col='grey20')  	
 			axis(1,YEARs[2:7],labels=YEARs[2:7],lwd=0.5,lwd.ticks=0.5,cex.axis=2,col='grey20') 	

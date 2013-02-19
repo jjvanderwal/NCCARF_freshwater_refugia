@@ -2,9 +2,9 @@
 #GNU General Public License .. feel free to use / distribute ... no warranties
 
 ################################################################################
-tax='fish'
-wd = paste('/home/jc165798/working/NARP_FW_SDM/models_',tax,'/',sep=''); setwd(wd)
-# wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',tax,'/',sep=''); setwd(wd)
+tax='turtles'
+# wd = paste('/home/jc165798/working/NARP_FW_SDM/models_',tax,'/',sep=''); setwd(wd)
+wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',tax,'/',sep=''); setwd(wd)
 script.file = '/home/jc148322/scripts/NARP_freshwater/SDM/99.script2run.R'
 
 exclude=read.csv('/home/jc148322/NARPfreshwater/SDM/fish.to.exclude.csv',as.is=TRUE)
