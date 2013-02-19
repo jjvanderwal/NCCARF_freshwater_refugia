@@ -16,7 +16,7 @@ pos$SegmentNo=extract.data(cbind(pos$lon, pos$lat),base.asc) #extract the Segmen
 ### Get the list of files to be made into asciis
 files=list.files(wd)
 #files=files[intersect(grep('RCP85',files),grep(yr,files))]
-files=c(files[grep('median',files)],files[grep('diff',files)])
+# files=c(files[grep('median',files)],files[grep('diff',files)])
 
 for (tfile in files) { cat(tfile,'\n')
 	setwd(wd)

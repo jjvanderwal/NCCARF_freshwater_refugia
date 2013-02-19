@@ -17,5 +17,5 @@ for (spp in species) {
 	close(zz) 
 
 	##submit the script
-	system(paste('qsub -a 0300 -l nodes=1:ppn=1 03.',spp,'.median.sh',sep=''))
+	system(paste('qsub -l nodes=1:ppn=1 03.',spp,'.median.sh',sep=''))
 }
