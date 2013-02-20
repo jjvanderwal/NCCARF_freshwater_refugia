@@ -17,5 +17,5 @@ for (spp in species) {
 	close(zz) 
 
 	##submit the script
-	system(paste('qsub -a 0600 -l nodes=1:ppn=1 04.',spp,'.asciis.sh',sep=''))
+	system(paste('qsub -l nodes=1:ppn=1 04.',spp,'.asciis.sh',sep=''))
 }

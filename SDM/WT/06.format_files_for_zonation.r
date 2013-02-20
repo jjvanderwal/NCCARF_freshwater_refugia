@@ -7,7 +7,7 @@ species=setdiff(species,exclude)
 
 out.dir='/home/jc148322/NARPfreshwater/SDM/Zonation/'
 
-asciis=list.files('/home/jc148322/NARPfreshwater/SDM/Fish/models/Acanthopagrus_berda/output/asciis/WT_realized')
+asciis=list.files('/home/jc165798/working/NARP_FW_SDM/models_fish/Ambassis_agassizii/output/asciis/WT_realized')
 asciis=asciis[-grep('current',asciis)]
 gcms=unique(sapply(strsplit(asciis,'_'),'[',2))
 years=unique(sapply(strsplit(asciis,'_'),'[',3)); years=gsub('.asc.gz','',years)
@@ -32,8 +32,8 @@ dir.create(paste(out.dir,'current/',sep=''),recursive=TRUE)
 for (spp in species) {
 	spp.dir=paste(wd, spp,'/output/asciis/',sep=''); setwd(spp.dir)
 
-	system(paste('cp ',spp.dir,'WT_realized/current.asc.gz ',out.dir,'current/',sep=''))
-	system(paste('mv ',out.dir,'current/current.asc.gz ',out.dir,'current/',spp,'.asc.gz',sep=''))
+	system(paste('cp ',spp.dir,'WT_realized/current_1990.asc.gz ',out.dir,'current/',sep=''))
+	system(paste('mv ',out.dir,'current/current_1990.asc.gz ',out.dir,'current/',spp,'.asc.gz',sep=''))
 	system(paste('gzip -d ',out.dir,'current/',spp,'.asc.gz',sep=''))
 
 	}
