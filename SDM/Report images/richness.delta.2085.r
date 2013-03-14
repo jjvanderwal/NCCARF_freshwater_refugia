@@ -20,7 +20,7 @@ taxa=c('fish','crayfish','frog','turtles')
 yr=2085	
 es='RCP85'
 
-for (tax in taxa[1]) { cat('calculating deltas for ',tax,'\n')
+for (tax in taxa) { cat('calculating deltas for ',tax,'\n')
 ##04.Calculate deltas for each taxa
 
 	pos=tpos
@@ -67,7 +67,7 @@ for (tax in taxa[1]) { cat('calculating deltas for ',tax,'\n')
 		plot(1:20,axes=FALSE,ann=FALSE,type='n')
 		text(10,18,"Proportion of current",cex=3)
 		color.legend(2,10,18,15,labs,rect.col=cols,align="rb",gradient="x", cex=1.5)
-		mtext(c('90th Percentile','50th Percentile','10th Percentile'),side=2,line=1,outer=TRUE,cex=2.5,at=c(0.26, 0.5, 0.875))
+		mtext(c('90th Percentile','50th Percentile','10th Percentile'),side=2,line=1,outer=TRUE,cex=2.5,at=c(0.26, 0.57, 0.875))
 		legend(1.3,8, fill='white','No richness, current or future',bty='n', cex=2.5)
 
 	dev.off()
