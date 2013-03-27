@@ -47,6 +47,7 @@ catchments=unique(connectivity[which(connectivity[,'SegmentNo'] %in% SegmentNo),
 SegmentNo=connectivity[which(connectivity[,'catchments'] %in% catchments),'SegmentNo'] #find the segment nos within those catchments
 
 SegmentNo=as.data.frame(SegmentNo) #turn it into a data frame for saving ease
+dir.create('summary')
 write.csv(SegmentNo,'summary/clip.csv',row.names=FALSE) #save
 
 distdata[which(!(distdata[,'SegmentNo'] %in% SegmentNo[,1])),spp]=0  #apply the clip
