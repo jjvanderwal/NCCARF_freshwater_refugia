@@ -1,5 +1,4 @@
 library(igraph); library(SDMTools)
-wd="/home/jc148322/NARPfreshwater/SDM/models/";setwd(wd)
 
 network.file="/home/jc148322/NARPfreshwater/SDM/network.file.Rdata" #define the name of the 
 load(network.file) #read in the netowrk attribute data
@@ -22,7 +21,7 @@ colnames(out)=c('SegmentNo', 'catchments')
 connectivity=unique(out)
 
 #fill holes in the data
-base.asc = read.asc.gz(paste('/home/jc148322/NARPfreshwater/SDM/SegmentNo_1km.asc.gz',sep='')) #read in the base asc file
+base.asc = read.asc('/home/jc246980/Janet_Stein_data/catchmentraster250m.asc') #read in the base asc file
 reaches=unique(base.asc,na.rm=T)
 holes=setdiff(reaches,connectivity[,'SegmentNo'])
 holes=na.omit(holes)

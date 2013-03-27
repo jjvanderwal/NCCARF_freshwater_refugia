@@ -2,21 +2,22 @@
 #GNU General Public License .. feel free to use / distribute ... no warranties
 
 ################################################################################
-tax='frog'
-sh.dir=paste('/home/jc148322/scripts/NARP_freshwater/SDM/richness/',tax,'/',sep='');dir.create(sh.dir,recursive=TRUE); setwd(sh.dir)
-# wd = paste('/home/jc165798/working/NARP_FW_SDM/models_',tax,'/',sep=''); #use this for fish for now.
-wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',tax,'/',sep=''); 
-# clip.column='province' #basins2, province
-clip.column='basins2'
-script.file = '/home/jc148322/scripts/NARP_freshwater/SDM/05.script2run.R'
-ESs=c('RCP3PD','RCP45','RCP6','RCP85')
+taxa=c('fish','crayfish','turtles','frog')
+taxon=taxa[4] #change as appropriate
+wd = paste('/home/jc148322/NARPfreshwater/SDM/models_',taxon,'/',sep=''); 
 
+if (taxon==taxa[1]) clip.column='provinces' else clip.column='basins2'
+
+script.file = '/home/jc148322/scripts/NARP_freshwater/SDM/05.script2run.R'
+sh.dir=paste('/home/jc148322/scripts/NARP_freshwater/SDM/richness/',taxon,'/',sep='');dir.create(sh.dir,recursive=TRUE); setwd(sh.dir)
+
+ESs=c('RCP3PD','RCP45','RCP6','RCP85')
 
 for (es in ESs) {
 	#arguments 
 	es.arg = paste('es="',es,'" ',sep='')
 	wd.arg = paste('wd="',wd,'" ',sep='')
-	tax.arg = paste('tax="',tax,'" ',sep='')
+	tax.arg = paste('taxon="',taxon,'" ',sep='')
 	clip.arg = paste('clip.column="',clip.column,'" ',sep='')
 
 	#create sh file

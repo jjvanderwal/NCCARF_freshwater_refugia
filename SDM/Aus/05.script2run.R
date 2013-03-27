@@ -6,7 +6,7 @@ source('/home/jc148322/scripts/libraries/cool_functions.r')
 
 #working directory
 setwd(wd)
-load('/home/jc148322/NARPfreshwater/SDM/clip.Rdata') #load position data of segmentNo and provinces. object called clip.
+load('/home/jc148322/NARPfreshwater/SDM/clip.Rdata') #load position data of segmentNo and regions. object called clip.
 load('/home/jc148322/NARPfreshwater/SDM/connectivity.file.Rdata') #load position data of segmentNo and connected 'sub-graphs'. object called connectivity.
 
 exclude=read.csv('/home/jc148322/NARPfreshwater/SDM/fish.to.exclude.csv',as.is=TRUE)
@@ -35,8 +35,8 @@ for (spp in species) {cat (spp,'\n')
 		# SegmentNo=read.csv('summary/clip.csv',as.is=TRUE)
 	# } else {
 		occur=read.csv('occur.csv',as.is=T) #load occurrence data
-		provinces=unique(clip[which(clip$SegmentNo %in% occur$lat),clip.column])#find the provinces in which species has been observed
-		SegmentNo=clip$SegmentNo[which(clip[,clip.column] %in% provinces)] #find the segment nos within those provinces
+		regions=unique(clip[which(clip$SegmentNo %in% occur$lat),clip.column])#find the regions in which species has been observed - this will be fish provinces for fish, and level 2 basins for other taxa
+		SegmentNo=clip$SegmentNo[which(clip[,clip.column] %in% regions)] #find the segment nos within those regions
 		
 		real.mat[which(!(pot.mat[,'SegmentNo'] %in% SegmentNo)),]=0 #apply the clip
 		SegmentNo=pot.mat[which(real.mat[,1]>0),1] #further limit the clip to streams connected to areas currently suitable - find all currently suitable SegmentNos
