@@ -17,7 +17,7 @@ for (spp in species) {
 	spp.folder = paste(wd,spp,"/",sep=""); setwd(spp.folder) #define and set the species folder
 	spp.arg = paste('spp="',spp,'" ',sep='')
 	wd.arg = paste('wd="',wd,'" ',sep='')
-	tax.arg = paste('tax="',taxon,'" ',sep='')
+	tax.arg = paste('taxon="',taxon,'" ',sep='')
 	clip.arg = paste('clip.column="',clip.column,'" ',sep='')
 
 	zz = file('07.images.sh','w') ##create the sh file
